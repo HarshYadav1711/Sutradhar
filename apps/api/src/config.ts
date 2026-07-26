@@ -38,6 +38,10 @@ const AppConfigSchema = z
     WHATSAPP_BUSINESS_ACCOUNT_ID: z.string().optional().default(''),
     WHATSAPP_VERIFY_TOKEN: z.string().optional().default(''),
     META_APP_SECRET: z.string().optional().default(''),
+    WHATSAPP_REQUEST_TIMEOUT_MS: z.coerce.number().int().min(1000).max(60_000).default(10_000),
+    WHATSAPP_WEBHOOK_POLL_MS: z.coerce.number().int().min(100).max(60_000).default(1000),
+    WHATSAPP_WEBHOOK_MAX_ATTEMPTS: z.coerce.number().int().min(1).max(20).default(5),
+    WHATSAPP_WEBHOOK_STALE_MS: z.coerce.number().int().min(1000).max(3_600_000).default(60_000),
     LOG_LEVEL: z.string().min(1).default('info'),
   })
   .superRefine((config, ctx) => {

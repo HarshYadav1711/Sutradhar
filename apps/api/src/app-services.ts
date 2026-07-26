@@ -7,6 +7,9 @@ import type { ModelProvider } from './agent/model/types.js';
 import { createAgentToolRegistry } from './tools/index.js';
 import { OperatorQueryService } from './services/operator-query-service.js';
 import { SimulatorService } from './services/simulator-service.js';
+import { WhatsAppClient } from './whatsapp/client.js';
+import { WebhookInboxService } from './whatsapp/inbox.js';
+import { WebhookInboxWorker } from './whatsapp/worker.js';
 
 export type AppServices = {
   config: AppConfig;
@@ -15,6 +18,9 @@ export type AppServices = {
   orchestrator: AgentOrchestrator;
   simulator: SimulatorService;
   operator: OperatorQueryService;
+  whatsappClient: WhatsAppClient | null;
+  webhookInbox: WebhookInboxService;
+  webhookWorker: WebhookInboxWorker;
 };
 
 export function createModelProvider(config: AppConfig, override?: ModelProvider): ModelProvider {
@@ -34,11 +40,32 @@ export function createModelProvider(config: AppConfig, override?: ModelProvider)
   });
 }
 
+export function createWhatsAppClient(
+  config: AppConfig,
+  override?: WhatsAppClient | null,
+): WhatsAppClient | null {
+  if (override !== undefined) {
+    return override;
+  }
+  if (!config.WHATSAPP_ENABLED) {
+    return null;
+  }
+
+  return new WhatsAppClient({
+    accessToken: config.WHATSAPP_ACCESS_TOKEN,
+    phoneNumberId: config.WHATSAPP_PHONE_NUMBER_ID,
+    graphVersion: config.META_GRAPH_VERSION,
+    timeoutMs: config.WHATSAPP_REQUEST_TIMEOUT_MS,
+  });
+}
+
 export function createAppServices(input: {
   config: AppConfig;
   db: PrismaClient;
   model?: ModelProvider;
   orchestrator?: AgentOrchestrator;
+  whatsappClient?: WhatsAppClient | null;
+  startWorker?: boolean;
 }): AppServices {
   const model = createModelProvider(input.config, input.model);
   const tools = createAgentToolRegistry();
@@ -49,6 +76,16 @@ export function createAppServices(input: {
       currency: input.config.BUSINESS_CURRENCY,
     });
 
+  const whatsappClient = createWhatsAppClient(input.config, input.whatsappClient);
+  const webhookInbox = new WebhookInboxService(input.db, orchestrator, whatsappClient, {
+    maxAttempts: input.config.WHATSAPP_WEBHOOK_MAX_ATTEMPTS,
+    staleProcessingMs: input.config.WHATSAPP_WEBHOOK_STALE_MS,
+  });
+  const webhookWorker = new WebhookInboxWorker(webhookInbox, {
+    pollIntervalMs: input.config.WHATSAPP_WEBHOOK_POLL_MS,
+    enabled: input.config.WHATSAPP_ENABLED && input.startWorker !== false,
+  });
+
   return {
     config: input.config,
     db: input.db,
@@ -58,5 +95,8 @@ export function createAppServices(input: {
       timeZone: input.config.BUSINESS_TIMEZONE,
     }),
     operator: new OperatorQueryService(input.db),
+    whatsappClient,
+    webhookInbox,
+    webhookWorker,
   };
 }

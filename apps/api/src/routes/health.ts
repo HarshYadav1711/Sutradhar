@@ -42,7 +42,19 @@ export async function registerHealthRoutes(
     const llmOk = llmHealth.healthy;
 
     const whatsappEnabled = deps.config.WHATSAPP_ENABLED;
-    const whatsappOk = !whatsappEnabled || Boolean(deps.config.WHATSAPP_ACCESS_TOKEN);
+    let whatsappOk = true;
+    let whatsappDetail = 'disabled';
+    if (whatsappEnabled) {
+      const configured = Boolean(
+        deps.config.WHATSAPP_ACCESS_TOKEN &&
+          deps.config.WHATSAPP_PHONE_NUMBER_ID &&
+          deps.config.META_GRAPH_VERSION &&
+          deps.config.META_APP_SECRET &&
+          deps.config.WHATSAPP_VERIFY_TOKEN,
+      );
+      whatsappOk = configured;
+      whatsappDetail = configured ? 'ready' : 'degraded';
+    }
     const simulatorEnabled = deps.config.ENABLE_SIMULATOR;
 
     let status: 'ready' | 'degraded' | 'not_ready' = 'ready';
@@ -65,7 +77,7 @@ export async function registerHealthRoutes(
         whatsapp: {
           ok: whatsappOk,
           enabled: whatsappEnabled,
-          detail: whatsappEnabled ? 'configured' : 'disabled',
+          detail: whatsappDetail,
         },
         simulator: {
           ok: simulatorEnabled,

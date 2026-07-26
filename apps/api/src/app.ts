@@ -5,10 +5,12 @@ import { loadConfig, type AppConfig } from './config.js';
 import { createPrismaClient, type PrismaClient } from './db/client.js';
 import type { ModelProvider } from './agent/model/types.js';
 import type { AgentOrchestrator } from './agent/orchestrator.js';
+import type { WhatsAppClient } from './whatsapp/client.js';
 import { registerSecurityHooks } from './http/security.js';
 import { registerHealthRoutes } from './routes/health.js';
 import { registerOperatorRoutes } from './routes/operator.js';
 import { registerSimulatorRoutes } from './routes/simulator.js';
+import { registerWhatsAppWebhookRoutes } from './routes/whatsapp-webhook.js';
 
 export type BuildAppOptions = {
   logger?: boolean | { level?: string };
@@ -16,7 +18,8 @@ export type BuildAppOptions = {
   db?: PrismaClient;
   model?: ModelProvider;
   orchestrator?: AgentOrchestrator;
-  /** When true, do not create a DB client if none is provided. */
+  whatsappClient?: WhatsAppClient | null;
+  startWorker?: boolean;
   services?: AppServices;
 };
 
@@ -30,6 +33,8 @@ export async function buildApp(options: BuildAppOptions = {}) {
       db,
       ...(options.model ? { model: options.model } : {}),
       ...(options.orchestrator ? { orchestrator: options.orchestrator } : {}),
+      ...(options.whatsappClient !== undefined ? { whatsappClient: options.whatsappClient } : {}),
+      ...(options.startWorker !== undefined ? { startWorker: options.startWorker } : {}),
     });
 
   const app = Fastify({
@@ -37,6 +42,20 @@ export async function buildApp(options: BuildAppOptions = {}) {
       options.logger === undefined
         ? {
             level: config.LOG_LEVEL,
+            redact: {
+              paths: [
+                'req.headers.authorization',
+                'req.headers["x-hub-signature-256"]',
+                'config.WHATSAPP_ACCESS_TOKEN',
+                'config.META_APP_SECRET',
+                'config.WHATSAPP_VERIFY_TOKEN',
+                'config.ADMIN_API_TOKEN',
+                '*.accessToken',
+                '*.appSecret',
+                '*.verifyToken',
+              ],
+              remove: true,
+            },
           }
         : options.logger,
     bodyLimit: 32 * 1024,
@@ -59,6 +78,18 @@ export async function buildApp(options: BuildAppOptions = {}) {
   await registerOperatorRoutes(app, {
     config: services.config,
     operator: services.operator,
+  });
+  await registerWhatsAppWebhookRoutes(app, {
+    config: services.config,
+    inbox: services.webhookInbox,
+  });
+
+  app.addHook('onReady', async () => {
+    services.webhookWorker.start();
+  });
+
+  app.addHook('onClose', async () => {
+    await services.webhookWorker.stop();
   });
 
   app.setErrorHandler((error, request, reply) => {
