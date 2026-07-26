@@ -9,6 +9,8 @@
     "start": "node dist/server.js",
     "typecheck": "prisma generate && tsc -p tsconfig.json --noEmit",
     "test": "prisma generate && vitest run",
+    "chat": "tsx src/cli/chat.ts",
+    "demo:reset": "tsx src/cli/demo-reset.ts",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:seed": "prisma db seed",

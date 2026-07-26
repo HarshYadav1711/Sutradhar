@@ -1,19 +1,84 @@
 import type { FastifyInstance } from 'fastify';
-import { HealthResponseSchema } from '@sutradhar/contracts';
+import { HealthResponseSchema, ReadyResponseSchema } from '@sutradhar/contracts';
 
+import type { AppConfig } from '../config.js';
+import type { PrismaClient } from '../db/client.js';
+import type { ModelProvider } from '../agent/model/types.js';
 import { APP_VERSION } from '../version.js';
+import { sendError } from '../http/errors.js';
 
 const SERVICE_NAME = 'sutradhar-api';
 
-export async function registerHealthRoute(app: FastifyInstance): Promise<void> {
+export async function registerHealthRoutes(
+  app: FastifyInstance,
+  deps: {
+    config: AppConfig;
+    db: PrismaClient;
+    model: ModelProvider;
+  },
+): Promise<void> {
   app.get('/health', async () => {
-    const payload = HealthResponseSchema.parse({
+    return HealthResponseSchema.parse({
       service: SERVICE_NAME,
       status: 'ok',
       timestamp: new Date().toISOString(),
       version: APP_VERSION,
     });
+  });
 
-    return payload;
+  app.get('/ready', async (request, reply) => {
+    let databaseOk: boolean;
+    let databaseDetail: string;
+    try {
+      await deps.db.$queryRaw`SELECT 1`;
+      databaseOk = true;
+      databaseDetail = 'connected';
+    } catch (error) {
+      databaseOk = false;
+      databaseDetail = error instanceof Error ? error.message : 'database check failed';
+    }
+
+    const llmHealth = await deps.model.health();
+    const llmOk = llmHealth.healthy;
+
+    const whatsappEnabled = deps.config.WHATSAPP_ENABLED;
+    const whatsappOk = !whatsappEnabled || Boolean(deps.config.WHATSAPP_ACCESS_TOKEN);
+    const simulatorEnabled = deps.config.ENABLE_SIMULATOR;
+
+    let status: 'ready' | 'degraded' | 'not_ready' = 'ready';
+    if (!databaseOk) {
+      status = 'not_ready';
+    } else if (!llmOk || (whatsappEnabled && !whatsappOk)) {
+      status = 'degraded';
+    }
+
+    const payload = ReadyResponseSchema.parse({
+      service: SERVICE_NAME,
+      status,
+      timestamp: new Date().toISOString(),
+      checks: {
+        database: { ok: databaseOk, detail: databaseDetail },
+        llm: {
+          ok: llmOk,
+          detail: llmHealth.detail,
+        },
+        whatsapp: {
+          ok: whatsappOk,
+          enabled: whatsappEnabled,
+          detail: whatsappEnabled ? 'configured' : 'disabled',
+        },
+        simulator: {
+          ok: simulatorEnabled,
+          enabled: simulatorEnabled,
+          detail: simulatorEnabled ? 'enabled' : 'disabled',
+        },
+      },
+    });
+
+    if (status === 'not_ready') {
+      return sendError(reply, request, 503, 'NOT_READY', 'Service is not ready');
+    }
+
+    return reply.code(status === 'degraded' ? 200 : 200).send(payload);
   });
 }

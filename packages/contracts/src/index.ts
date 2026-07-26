@@ -1,1 +1,45 @@
 export { HealthResponseSchema, type HealthResponse } from './health.js';
+export { ReadyResponseSchema, ReadyCheckSchema, type ReadyResponse } from './ready.js';
+export {
+  ErrorEnvelopeSchema,
+  PaginationQuerySchema,
+  PaginationMetaSchema,
+  paginatedSchema,
+  type ErrorEnvelope,
+  type PaginationQuery,
+  type PaginationMeta,
+} from './common.js';
+export {
+  SimulatorMessageRequestSchema,
+  SimulatorMessageResponseSchema,
+  DemoResetResponseSchema,
+  type SimulatorMessageRequest,
+  type SimulatorMessageResponse,
+  type DemoResetResponse,
+} from './simulator.js';
+export {
+  ConversationStatusSchema,
+  OperatorOverviewSchema,
+  OperatorConversationListItemSchema,
+  OperatorConversationListResponseSchema,
+  OperatorConversationDetailSchema,
+  OperatorConversationTraceSchema,
+  OperatorBookingListItemSchema,
+  OperatorBookingListResponseSchema,
+  OperatorBookingDetailSchema,
+  OperatorHandoffListItemSchema,
+  OperatorHandoffListResponseSchema,
+  OperatorHandoffDetailSchema,
+  OperatorHandoffUpdateRequestSchema,
+  HandoffStatusSchema,
+  HandoffPrioritySchema,
+  type OperatorOverview,
+  type OperatorConversationListResponse,
+  type OperatorConversationDetail,
+  type OperatorConversationTrace,
+  type OperatorBookingListResponse,
+  type OperatorBookingDetail,
+  type OperatorHandoffListResponse,
+  type OperatorHandoffDetail,
+  type OperatorHandoffUpdateRequest,
+} from './operator.js';

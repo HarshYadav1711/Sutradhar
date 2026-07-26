@@ -1,20 +1,17 @@
 import 'dotenv/config';
 
 import { buildApp } from './app.js';
+import { loadConfig } from './config.js';
 import { databaseLifecycle } from './db/lifecycle.js';
 
-const DEFAULT_HOST = '0.0.0.0';
-const DEFAULT_PORT = 4000;
-
 async function start(): Promise<void> {
-  databaseLifecycle.start();
-  const app = await buildApp();
-  const port = Number.parseInt(process.env.PORT ?? String(DEFAULT_PORT), 10);
-  const host = process.env.HOST ?? DEFAULT_HOST;
-
-  if (Number.isNaN(port) || port <= 0) {
-    throw new Error(`Invalid PORT value: ${process.env.PORT ?? ''}`);
-  }
+  const config = loadConfig(process.env);
+  databaseLifecycle.start(config.DATABASE_URL);
+  const app = await buildApp({
+    config,
+    db: databaseLifecycle.prisma,
+    logger: { level: config.LOG_LEVEL },
+  });
 
   let shuttingDown = false;
 
@@ -44,8 +41,8 @@ async function start(): Promise<void> {
   });
 
   try {
-    await app.listen({ port, host });
-    app.log.info({ port, host }, 'API listening');
+    await app.listen({ port: config.PORT, host: config.HOST });
+    app.log.info({ port: config.PORT, host: config.HOST }, 'API listening');
   } catch (error) {
     app.log.error({ err: error }, 'Failed to start API');
     await databaseLifecycle.stop();

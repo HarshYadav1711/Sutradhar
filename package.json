@@ -23,7 +23,9 @@
     "db:migrate": "npm run db:migrate -w @sutradhar/api",
     "db:seed": "npm run db:seed -w @sutradhar/api",
     "db:reset": "npm run db:reset -w @sutradhar/api",
-    "db:studio": "npm run db:studio -w @sutradhar/api"
+    "db:studio": "npm run db:studio -w @sutradhar/api",
+    "chat": "npm run chat -w @sutradhar/api",
+    "demo:reset": "npm run demo:reset -w @sutradhar/api"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
