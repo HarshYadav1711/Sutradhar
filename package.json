@@ -18,7 +18,12 @@
     "typecheck": "npm run build -w @sutradhar/contracts && npm run typecheck -w @sutradhar/contracts && npm run typecheck -w @sutradhar/api && npm run typecheck -w @sutradhar/dashboard",
     "test": "npm run build -w @sutradhar/contracts && npm run test -w @sutradhar/api",
     "check": "npm run lint && npm run typecheck && npm test && npm run build",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "db:generate": "npm run db:generate -w @sutradhar/api",
+    "db:migrate": "npm run db:migrate -w @sutradhar/api",
+    "db:seed": "npm run db:seed -w @sutradhar/api",
+    "db:reset": "npm run db:reset -w @sutradhar/api",
+    "db:studio": "npm run db:studio -w @sutradhar/api"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

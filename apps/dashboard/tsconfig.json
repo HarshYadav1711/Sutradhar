@@ -7,6 +7,7 @@
     "jsx": "react-jsx",
     "noEmit": true,
     "allowImportingTsExtensions": false,
+    "typeRoots": ["./ts-types", "../../node_modules/@types"],
     "types": ["vite/client"]
   },
   "include": ["src/**/*.ts", "src/**/*.tsx", "vite.config.ts"]

@@ -1,0 +1,269 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum SlotStatus {
+  AVAILABLE
+  HELD
+  BOOKED
+  UNAVAILABLE
+}
+
+enum BookingStatus {
+  PENDING_CONFIRMATION
+  CONFIRMED
+  RESCHEDULED
+  CANCELLED
+  COMPLETED
+}
+
+enum ConversationStatus {
+  IDLE
+  COLLECTING_BOOKING_DETAILS
+  AWAITING_BOOKING_CONFIRMATION
+  BOOKED
+  AWAITING_RESCHEDULE_CONFIRMATION
+  HANDED_OFF
+  CLOSED
+}
+
+enum MessageDirection {
+  INBOUND
+  OUTBOUND
+}
+
+enum MessageType {
+  TEXT
+  UNSUPPORTED
+  SYSTEM
+}
+
+enum PendingActionType {
+  CREATE_BOOKING
+  RESCHEDULE_BOOKING
+}
+
+enum PendingActionStatus {
+  PENDING
+  COMMITTED
+  CANCELLED
+  EXPIRED
+}
+
+enum ToolExecutionStatus {
+  SUCCESS
+  ERROR
+  VALIDATION_ERROR
+}
+
+enum HandoffPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum HandoffStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum WebhookProcessingStatus {
+  RECEIVED
+  PROCESSING
+  PROCESSED
+  FAILED
+  DEAD_LETTER
+}
+
+model Customer {
+  id                String   @id @default(cuid())
+  whatsappNumber    String?  @unique
+  name              String?
+  preferredLanguage String?
+  defaultAddress    String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  bookings      Booking[]
+  conversations Conversation[]
+}
+
+model Service {
+  id                       String   @id @default(cuid())
+  name                     String
+  slug                     String   @unique
+  description              String
+  basePriceMinor           Int
+  estimatedDurationMinutes Int
+  active                   Boolean  @default(true)
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+
+  availabilitySlots AvailabilitySlot[]
+  bookings          Booking[]
+}
+
+model AvailabilitySlot {
+  id               String     @id @default(cuid())
+  serviceId        String
+  startsAt         DateTime
+  endsAt           DateTime
+  timezone         String
+  status           SlotStatus @default(AVAILABLE)
+  staffDisplayName String?
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  service  Service   @relation(fields: [serviceId], references: [id], onDelete: Restrict)
+  bookings Booking[]
+
+  @@unique([serviceId, startsAt, endsAt])
+  @@index([serviceId, startsAt, status])
+}
+
+model Booking {
+  id                   String        @id @default(cuid())
+  reference            String        @unique
+  customerId           String
+  serviceId            String
+  availabilitySlotId   String
+  quantity             Int           @default(1)
+  address              String
+  estimatedPriceMinor  Int
+  status               BookingStatus
+  confirmedAt          DateTime?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  customer             Customer          @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  service              Service           @relation(fields: [serviceId], references: [id], onDelete: Restrict)
+  availabilitySlot     AvailabilitySlot  @relation(fields: [availabilitySlotId], references: [id], onDelete: Restrict)
+  activeConversations  Conversation[]
+  handoffs             HumanHandoff[]
+
+  @@index([customerId, status])
+  @@index([availabilitySlotId])
+}
+
+model Conversation {
+  id               String             @id @default(cuid())
+  customerId       String
+  status           ConversationStatus @default(IDLE)
+  currentIntent    String?
+  detectedLanguage String?
+  structuredState  Json
+  compactSummary   String?
+  activeBookingId  String?
+  lastActivityAt   DateTime           @default(now())
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  customer       Customer        @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  activeBooking  Booking?        @relation(fields: [activeBookingId], references: [id], onDelete: SetNull)
+  messages       Message[]
+  pendingActions PendingAction[]
+  toolExecutions ToolExecution[]
+  handoffs       HumanHandoff[]
+
+  @@index([customerId, status])
+  @@index([lastActivityAt])
+}
+
+model Message {
+  id                String           @id @default(cuid())
+  conversationId    String
+  externalMessageId String?          @unique
+  direction         MessageDirection
+  messageType       MessageType      @default(TEXT)
+  content           String
+  metadata          Json?
+  createdAt         DateTime         @default(now())
+
+  conversation                 Conversation    @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  pendingActionsAsProposal     PendingAction[] @relation("PendingActionProposalMessage")
+  pendingActionsAsConfirmation PendingAction[] @relation("PendingActionConfirmationMessage")
+
+  @@index([conversationId, createdAt])
+}
+
+model PendingAction {
+  id                    String              @id @default(cuid())
+  conversationId        String
+  actionType            PendingActionType
+  payload               Json
+  status                PendingActionStatus @default(PENDING)
+  expiresAt             DateTime
+  proposalMessageId     String?
+  confirmationMessageId String?
+  version               Int                 @default(1)
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  conversation        Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  proposalMessage     Message?     @relation("PendingActionProposalMessage", fields: [proposalMessageId], references: [id], onDelete: SetNull)
+  confirmationMessage Message?     @relation("PendingActionConfirmationMessage", fields: [confirmationMessageId], references: [id], onDelete: SetNull)
+
+  @@index([conversationId, status])
+  @@index([expiresAt, status])
+}
+
+model ToolExecution {
+  id             String              @id @default(cuid())
+  conversationId String
+  toolName       String
+  validatedInput Json
+  output         Json?
+  status         ToolExecutionStatus
+  durationMs     Int
+  errorCode      String?
+  errorMessage   String?
+  createdAt      DateTime            @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+  @@index([toolName, createdAt])
+}
+
+model HumanHandoff {
+  id             String          @id @default(cuid())
+  reference      String          @unique
+  conversationId String
+  bookingId      String?
+  reason         String
+  summary        String
+  priority       HandoffPriority @default(NORMAL)
+  status         HandoffStatus   @default(OPEN)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Restrict)
+  booking      Booking?     @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+
+  @@index([status, priority])
+  @@index([conversationId])
+}
+
+model WebhookEvent {
+  id             String                  @id @default(cuid())
+  externalKey    String                  @unique
+  eventType      String
+  payload        Json
+  status         WebhookProcessingStatus @default(RECEIVED)
+  attemptCount   Int                     @default(0)
+  nextAttemptAt  DateTime?
+  failureCode    String?
+  failureMessage String?
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
+
+  @@index([status, nextAttemptAt])
+}

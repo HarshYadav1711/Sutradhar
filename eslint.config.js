@@ -11,6 +11,7 @@ export default tseslint.config(
       '**/node_modules/**',
       '**/dist/**',
       '**/coverage/**',
+      '**/src/generated/**',
       'package-lock.json',
       '**/*.db',
     ],

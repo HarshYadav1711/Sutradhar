@@ -1,9 +1,13 @@
+import 'dotenv/config';
+
 import { buildApp } from './app.js';
+import { databaseLifecycle } from './db/lifecycle.js';
 
 const DEFAULT_HOST = '0.0.0.0';
 const DEFAULT_PORT = 4000;
 
 async function start(): Promise<void> {
+  databaseLifecycle.start();
   const app = await buildApp();
   const port = Number.parseInt(process.env.PORT ?? String(DEFAULT_PORT), 10);
   const host = process.env.HOST ?? DEFAULT_HOST;
@@ -24,6 +28,7 @@ async function start(): Promise<void> {
 
     try {
       await app.close();
+      await databaseLifecycle.stop();
       process.exit(0);
     } catch (error) {
       app.log.error({ err: error }, 'Error during shutdown');
@@ -43,6 +48,7 @@ async function start(): Promise<void> {
     app.log.info({ port, host }, 'API listening');
   } catch (error) {
     app.log.error({ err: error }, 'Failed to start API');
+    await databaseLifecycle.stop();
     process.exit(1);
   }
 }
