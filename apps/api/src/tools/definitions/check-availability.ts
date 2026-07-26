@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 import { DomainNotFoundError, DomainValidationError } from '../../domain/errors.js';
 import {
+  assertReasonableBookingDate,
   formatSlotLabel,
   hourInTimeZone,
   periodForHour,
@@ -34,12 +35,21 @@ export const checkAvailabilityTool: AgentTool<typeof inputSchema, unknown> = {
   inputSchema,
   async execute(input, context) {
     const timeZone = context.timeZone ?? process.env.BUSINESS_TIMEZONE ?? 'Asia/Kolkata';
+    const now = context.now ?? new Date();
     const service = await context.db.service.findFirst({
       where: { id: input.serviceId, active: true },
     });
 
     if (!service) {
       throw new DomainNotFoundError('Service not found');
+    }
+
+    try {
+      assertReasonableBookingDate(input.date, now, timeZone);
+    } catch (error) {
+      throw new DomainValidationError(
+        error instanceof Error ? error.message : 'Invalid requested date',
+      );
     }
 
     let dayBounds;

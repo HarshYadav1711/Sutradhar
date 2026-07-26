@@ -12,6 +12,8 @@ describe('ConfirmationPolicy', () => {
     'book it',
     'go ahead',
     'yes please',
+    'yes confirm it',
+    'Yes, confirm it.',
     'haan',
     'han',
     'kar do',

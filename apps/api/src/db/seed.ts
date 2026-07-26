@@ -152,6 +152,7 @@ export async function seedDatabase(prisma: PrismaClient, options: SeedOptions = 
   const now = options.now ?? new Date();
 
   await prisma.webhookEvent.deleteMany();
+  await prisma.operationalEvent.deleteMany();
   await prisma.toolExecution.deleteMany();
   await prisma.pendingAction.deleteMany();
   await prisma.humanHandoff.deleteMany();
