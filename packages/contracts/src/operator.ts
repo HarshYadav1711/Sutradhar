@@ -38,6 +38,7 @@ export const OperatorConversationListItemSchema = z.object({
   createdAt: z.string().min(1),
   customer: OperatorCustomerSummarySchema,
   activeBookingId: z.string().nullable(),
+  activeBookingReference: z.string().nullable(),
   pendingActionId: z.string().nullable(),
 });
 

@@ -16,7 +16,7 @@
     "build": "npm run build -w @sutradhar/contracts && npm run build -w @sutradhar/api && npm run build -w @sutradhar/dashboard",
     "lint": "eslint .",
     "typecheck": "npm run build -w @sutradhar/contracts && npm run typecheck -w @sutradhar/contracts && npm run typecheck -w @sutradhar/api && npm run typecheck -w @sutradhar/dashboard",
-    "test": "npm run build -w @sutradhar/contracts && npm run test -w @sutradhar/api",
+    "test": "npm run build -w @sutradhar/contracts && npm run test -w @sutradhar/api && npm run test -w @sutradhar/dashboard",
     "check": "npm run lint && npm run typecheck && npm test && npm run build",
     "format": "prettier --write .",
     "db:generate": "npm run db:generate -w @sutradhar/api",

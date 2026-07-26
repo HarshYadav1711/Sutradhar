@@ -85,6 +85,9 @@ export class OperatorQueryService {
       take: input.pageSize,
       include: {
         customer: true,
+        activeBooking: {
+          select: { id: true, reference: true },
+        },
         pendingActions: {
           where: { status: 'PENDING' },
           orderBy: { createdAt: 'desc' },
@@ -107,6 +110,7 @@ export class OperatorQueryService {
           name: row.customer.name,
         },
         activeBookingId: row.activeBookingId,
+        activeBookingReference: row.activeBooking?.reference ?? null,
         pendingActionId: row.pendingActions[0]?.id ?? null,
       })),
       pagination: {
