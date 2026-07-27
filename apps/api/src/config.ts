@@ -78,6 +78,14 @@ const AppConfigSchema = z
       });
     }
 
+    if (config.NODE_ENV === 'production' && config.ENABLE_SIMULATOR) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['ENABLE_SIMULATOR'],
+        message: 'ENABLE_SIMULATOR must be false in production',
+      });
+    }
+
     if (config.NODE_ENV === 'production' && config.ADMIN_API_TOKEN.trim() === '') {
       ctx.addIssue({
         code: 'custom',

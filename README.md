@@ -118,12 +118,14 @@ This repository is a working local product prototype. It is not described as pro
 git clone <your-fork-or-clone-url>
 cd Sutradhar
 npm ci
-cp .env.example .env
+cp .env.example apps/api/.env
 ```
 
-Edit `.env`:
+A repository-root `.env` is also loaded as a fallback, but Prisma CLI and workspace scripts prefer `apps/api/.env`.
 
-- Set a non-empty `ADMIN_API_TOKEN` for the operator console.
+Edit `apps/api/.env`:
+
+- Set a non-empty `ADMIN_API_TOKEN` for the operator console and for `POST /api/simulator/reset`.
 - Leave `WHATSAPP_ENABLED=false` for local simulator demos.
 - Keep `DATABASE_URL=file:./prisma/dev.db` unless you intentionally change it.
 
@@ -181,7 +183,7 @@ Uses the same orchestrator, tools, policies, and database as WhatsApp.
 npm run chat
 ```
 
-Commands inside the chat: `/help`, `/reset`, `/quit`.
+Commands inside the chat: `/help`, `/reset` (fresh conversation for the same customer; does not wipe bookings), `/quit`.
 
 HTTP simulator (when `ENABLE_SIMULATOR=true`):
 
@@ -191,7 +193,7 @@ curl -s http://localhost:4000/api/simulator/messages \
   -d "{\"customerKey\":\"simulator:demo\",\"text\":\"I need AC servicing tomorrow evening\",\"startFresh\":true}"
 ```
 
-Reset demo data without changing migrations:
+Reset demo catalogue data without changing migrations (`ADMIN_API_TOKEN` required when configured):
 
 ```bash
 npm run demo:reset

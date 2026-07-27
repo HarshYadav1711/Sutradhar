@@ -179,6 +179,14 @@ export class PendingActionExecutor {
       throw new DomainValidationError('Availability slot is no longer available');
     }
 
+    const slotClaimed = await tx.availabilitySlot.updateMany({
+      where: { id: slot.id, status: 'AVAILABLE' },
+      data: { status: 'BOOKED' },
+    });
+    if (slotClaimed.count !== 1) {
+      throw new DomainValidationError('Availability slot is no longer available');
+    }
+
     let booking;
     let attempts = 0;
     while (attempts < 5) {
@@ -219,11 +227,6 @@ export class PendingActionExecutor {
     if (!booking) {
       throw new DomainConflictError('Unable to allocate a unique booking reference');
     }
-
-    await tx.availabilitySlot.update({
-      where: { id: slot.id },
-      data: { status: 'BOOKED' },
-    });
 
     await tx.conversation.update({
       where: { id: conversationId },
@@ -274,6 +277,10 @@ export class PendingActionExecutor {
       throw new DomainValidationError('Booking does not belong to this customer');
     }
 
+    if (booking.status !== 'CONFIRMED' && booking.status !== 'RESCHEDULED') {
+      throw new DomainValidationError('Only confirmed bookings can be rescheduled');
+    }
+
     const conversation = await tx.conversation.findUnique({
       where: { id: conversationId },
     });
@@ -291,6 +298,14 @@ export class PendingActionExecutor {
     }
 
     if (newSlot.status !== 'AVAILABLE') {
+      throw new DomainValidationError('Replacement slot is no longer available');
+    }
+
+    const newSlotClaimed = await tx.availabilitySlot.updateMany({
+      where: { id: newSlot.id, status: 'AVAILABLE' },
+      data: { status: 'BOOKED' },
+    });
+    if (newSlotClaimed.count !== 1) {
       throw new DomainValidationError('Replacement slot is no longer available');
     }
 
@@ -312,11 +327,6 @@ export class PendingActionExecutor {
         service: true,
         availabilitySlot: true,
       },
-    });
-
-    await tx.availabilitySlot.update({
-      where: { id: newSlot.id },
-      data: { status: 'BOOKED' },
     });
 
     await tx.conversation.update({

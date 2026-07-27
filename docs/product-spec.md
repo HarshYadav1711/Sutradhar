@@ -109,4 +109,4 @@ The initial release is complete only when all of the following are true:
 
 ## Status note
 
-This document describes the intended product. Capabilities listed here are requirements for implementation stages, not claims that they already exist in the repository.
+This document describes the intended product. Capabilities listed here are requirements for the implementation, not claims that every item already exists in the repository.

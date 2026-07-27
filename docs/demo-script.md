@@ -92,7 +92,7 @@ Confirm the booking’s slot changed only after confirmation.
 
 ## 8. Trigger a complaint handoff
 
-Start a fresh thread (`/reset` in chat) or a new customer key, then:
+Start a fresh thread with `/reset` in chat (keeps existing bookings/handoffs) or a new customer key, then:
 
 ```text
 The last technician damaged my AC and nobody responded. I want a refund.

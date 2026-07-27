@@ -1,4 +1,4 @@
-import 'dotenv/config';
+import '../load-env.js';
 
 import * as readline from 'node:readline/promises';
 import { stdin as input, stdout as output } from 'node:process';
@@ -6,15 +6,14 @@ import { stdin as input, stdout as output } from 'node:process';
 import { buildApp } from '../app.js';
 import { loadConfig } from '../config.js';
 import { createPrismaClient } from '../db/client.js';
-import {
-  DemoResetResponseSchema,
-  SimulatorMessageResponseSchema,
-} from '@sutradhar/contracts';
+import { SimulatorMessageResponseSchema } from '@sutradhar/contracts';
 
 const DEFAULT_CUSTOMER_KEY = 'simulator:local-demo';
 
 function printHelp(): void {
   output.write('Commands: /reset  /quit  /help\n');
+  output.write('/reset starts a fresh conversation for this customer (does not wipe the database).\n');
+  output.write('For a full catalogue reseed, run npm run demo:reset from the repo root.\n');
   output.write('Type a message to talk to Sutradhar through the local simulator.\n\n');
 }
 
@@ -31,10 +30,12 @@ async function main(): Promise<void> {
   }
 
   const db = createPrismaClient(config.DATABASE_URL);
+  // Avoid a second expiry/webhook worker when `npm run dev` already owns the SQLite file.
   const app = await buildApp({
     config,
     db,
     logger: false,
+    startWorker: false,
   });
 
   const customerKey =
@@ -74,17 +75,10 @@ async function main(): Promise<void> {
       }
 
       if (line === '/reset') {
-        const resetResponse = await app.inject({
-          method: 'POST',
-          url: '/api/simulator/reset',
-        });
-        if (resetResponse.statusCode !== 200) {
-          output.write(`Reset failed (${resetResponse.statusCode}): ${resetResponse.body}\n`);
-          continue;
-        }
-        DemoResetResponseSchema.parse(resetResponse.json());
         startFreshNext = true;
-        output.write('Demo data reset. Next message starts a clean conversation.\n');
+        output.write(
+          'Next message starts a fresh conversation for this customer. Existing bookings and handoffs are kept.\n',
+        );
         continue;
       }
 

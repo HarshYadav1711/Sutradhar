@@ -11,7 +11,7 @@ const PENDING_TTL_MS = 30 * 60 * 1000;
 const inputSchema = z.object({
   serviceId: z.string().min(1),
   availabilitySlotId: z.string().min(1),
-  quantity: z.number().int().min(1).max(20),
+  quantity: z.coerce.number().int().min(1).max(20),
   address: z.string().trim().min(3).max(300),
 });
 
@@ -23,6 +23,16 @@ export const prepareBookingTool: AgentTool<typeof inputSchema, unknown> = {
   async execute(input, context) {
     const now = context.now ?? new Date();
     const timeZone = context.timeZone ?? 'Asia/Kolkata';
+
+    const conversation = await context.db.conversation.findUnique({
+      where: { id: context.conversationId },
+    });
+    if (!conversation) {
+      throw new DomainNotFoundError('Conversation not found');
+    }
+    if (conversation.status === 'HANDED_OFF') {
+      throw new DomainValidationError('Cannot prepare a booking while the conversation is handed off');
+    }
 
     const service = await context.db.service.findFirst({
       where: { id: input.serviceId, active: true },
@@ -73,7 +83,6 @@ export const prepareBookingTool: AgentTool<typeof inputSchema, unknown> = {
         where: {
           conversationId: context.conversationId,
           status: 'PENDING',
-          actionType: 'CREATE_BOOKING',
         },
         data: {
           status: 'CANCELLED',

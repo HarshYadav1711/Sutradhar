@@ -6,6 +6,7 @@ import {
 } from '@sutradhar/contracts';
 
 import type { AppConfig } from '../config.js';
+import { requireAdmin } from '../http/admin-auth.js';
 import { parseOrThrow, sendError } from '../http/errors.js';
 import type { SimulatorService } from '../services/simulator-service.js';
 
@@ -62,6 +63,14 @@ export async function registerSimulatorRoutes(
   app.post('/api/simulator/reset', async (request, reply) => {
     if (!deps.config.ENABLE_SIMULATOR) {
       return sendError(reply, request, 404, 'SIMULATOR_DISABLED', 'Simulator is disabled');
+    }
+
+    // Destructive catalogue wipe — require operator token whenever one is configured.
+    if (deps.config.ADMIN_API_TOKEN.trim() !== '') {
+      const ok = await requireAdmin(request, reply, deps.config.ADMIN_API_TOKEN);
+      if (!ok) {
+        return;
+      }
     }
 
     const result = await deps.simulator.resetDemo();

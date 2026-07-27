@@ -116,10 +116,26 @@ export class WebhookInboxService {
 
   async recoverStaleProcessing(now = new Date()): Promise<number> {
     const staleBefore = new Date(now.getTime() - this.staleProcessingMs);
-    const result = await this.db.webhookEvent.updateMany({
+
+    const deadLetter = await this.db.webhookEvent.updateMany({
       where: {
         status: 'PROCESSING',
         updatedAt: { lt: staleBefore },
+        attemptCount: { gte: this.maxAttempts },
+      },
+      data: {
+        status: 'DEAD_LETTER',
+        failureCode: 'STALE_PROCESSING',
+        failureMessage: 'Stale PROCESSING event exceeded max attempts',
+        nextAttemptAt: null,
+      },
+    });
+
+    const retryable = await this.db.webhookEvent.updateMany({
+      where: {
+        status: 'PROCESSING',
+        updatedAt: { lt: staleBefore },
+        attemptCount: { lt: this.maxAttempts },
       },
       data: {
         status: 'FAILED',
@@ -128,7 +144,8 @@ export class WebhookInboxService {
         nextAttemptAt: now,
       },
     });
-    return result.count;
+
+    return deadLetter.count + retryable.count;
   }
 
   async claimNext(now = new Date()) {
@@ -178,14 +195,14 @@ export class WebhookInboxService {
 
   async processClaimedEvent(eventId: string, now = new Date()): Promise<void> {
     const event = await this.db.webhookEvent.findUnique({ where: { id: eventId } });
-    if (!event) {
+    if (!event || event.status !== 'PROCESSING') {
       return;
     }
 
     try {
       await this.processPayload(event.id, event.eventType, event.payload);
-      await this.db.webhookEvent.update({
-        where: { id: event.id },
+      const completed = await this.db.webhookEvent.updateMany({
+        where: { id: event.id, status: 'PROCESSING' },
         data: {
           status: 'PROCESSED',
           failureCode: null,
@@ -193,7 +210,14 @@ export class WebhookInboxService {
           nextAttemptAt: null,
         },
       });
+      if (completed.count !== 1) {
+        return;
+      }
     } catch (error) {
+      const stillOwner = await this.db.webhookEvent.findUnique({ where: { id: event.id } });
+      if (!stillOwner || stillOwner.status !== 'PROCESSING') {
+        return;
+      }
       await this.recordFailure(event.id, event.attemptCount, error, now);
     }
   }
@@ -345,18 +369,11 @@ export class WebhookInboxService {
       throw new PermanentWebhookError('Unsupported message payload missing required fields');
     }
 
-    // Persist an inbound marker through the orchestrator path only for text.
-    // For media, reply with a clear limitation and record operational context via webhook event type.
     if (!this.whatsapp) {
       throw new PermanentWebhookError('WhatsApp client is not configured', 'WHATSAPP_DISABLED');
     }
 
     try {
-      const sent = await this.whatsapp.sendText({
-        to: waId,
-        body: UNSUPPORTED_MEDIA_REPLY,
-      });
-
       const customer = await this.db.customer.upsert({
         where: { whatsappNumber: waId },
         create: {
@@ -383,18 +400,35 @@ export class WebhookInboxService {
         });
       }
 
-      await this.db.message.create({
-        data: {
-          conversationId: conversation.id,
-          externalMessageId,
-          direction: 'INBOUND',
-          messageType: 'UNSUPPORTED',
-          content: `[unsupported:${messageType}]`,
-          metadata: {
-            channel: 'whatsapp',
-            messageType,
+      try {
+        await this.db.message.create({
+          data: {
+            conversationId: conversation.id,
+            externalMessageId,
+            direction: 'INBOUND',
+            messageType: 'UNSUPPORTED',
+            content: `[unsupported:${messageType}]`,
+            metadata: {
+              channel: 'whatsapp',
+              messageType,
+            },
           },
-        },
+        });
+      } catch (error) {
+        if (
+          error instanceof Error &&
+          'code' in error &&
+          (error as { code?: string }).code === 'P2002'
+        ) {
+          // Duplicate inbound media event already handled.
+          return;
+        }
+        throw error;
+      }
+
+      const sent = await this.whatsapp.sendText({
+        to: waId,
+        body: UNSUPPORTED_MEDIA_REPLY,
       });
 
       await this.db.message.create({
@@ -417,7 +451,6 @@ export class WebhookInboxService {
         'code' in error &&
         (error as { code?: string }).code === 'P2002'
       ) {
-        // Duplicate inbound media event already handled.
         return;
       }
       if (error instanceof WhatsAppClientError && !error.retryable) {

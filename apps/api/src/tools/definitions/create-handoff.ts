@@ -57,6 +57,27 @@ export const createHandoffTool: AgentTool<typeof inputSchema, unknown> = {
     );
 
     if (existing) {
+      await context.db.$transaction(async (tx) => {
+        await tx.pendingAction.updateMany({
+          where: {
+            conversationId: context.conversationId,
+            status: 'PENDING',
+          },
+          data: {
+            status: 'CANCELLED',
+            version: { increment: 1 },
+          },
+        });
+        await tx.conversation.update({
+          where: { id: context.conversationId },
+          data: {
+            status: 'HANDED_OFF',
+            lastActivityAt: now,
+            currentIntent: 'handoff',
+          },
+        });
+      });
+
       return {
         handoffId: existing.id,
         reference: existing.reference,
@@ -104,13 +125,26 @@ export const createHandoffTool: AgentTool<typeof inputSchema, unknown> = {
       throw new Error('Unable to allocate a unique handoff reference');
     }
 
-    await context.db.conversation.update({
-      where: { id: context.conversationId },
-      data: {
-        status: 'HANDED_OFF',
-        lastActivityAt: now,
-        currentIntent: 'handoff',
-      },
+    await context.db.$transaction(async (tx) => {
+      await tx.pendingAction.updateMany({
+        where: {
+          conversationId: context.conversationId,
+          status: 'PENDING',
+        },
+        data: {
+          status: 'CANCELLED',
+          version: { increment: 1 },
+        },
+      });
+
+      await tx.conversation.update({
+        where: { id: context.conversationId },
+        data: {
+          status: 'HANDED_OFF',
+          lastActivityAt: now,
+          currentIntent: 'handoff',
+        },
+      });
     });
 
     return {

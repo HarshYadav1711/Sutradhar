@@ -23,7 +23,7 @@ describe('Security and configuration', () => {
 
     const config = loadTestConfig({
       DATABASE_URL: databaseUrl,
-      ADMIN_API_TOKEN: 'stage9-admin-token',
+      ADMIN_API_TOKEN: 'security-admin-token',
       CORS_ORIGIN: 'http://localhost:5173,http://127.0.0.1:5173',
       RATE_LIMIT_MAX: 200,
       BODY_LIMIT_BYTES: 2048,
@@ -73,6 +73,7 @@ describe('Security and configuration', () => {
         ADMIN_API_TOKEN: '',
         WHATSAPP_ENABLED: 'false',
         LLM_PROVIDER: 'ollama',
+        ENABLE_SIMULATOR: 'false',
       }),
     ).toThrow(/ADMIN_API_TOKEN/);
   });
@@ -85,8 +86,22 @@ describe('Security and configuration', () => {
         ADMIN_API_TOKEN: 'prod-token-value',
         LLM_PROVIDER: 'scripted',
         WHATSAPP_ENABLED: 'false',
+        ENABLE_SIMULATOR: 'false',
       }),
     ).toThrow(/scripted/);
+  });
+
+  it('rejects ENABLE_SIMULATOR in production', () => {
+    expect(() =>
+      loadConfig({
+        NODE_ENV: 'production',
+        DATABASE_URL: databaseUrl,
+        ADMIN_API_TOKEN: 'prod-token-value',
+        LLM_PROVIDER: 'ollama',
+        WHATSAPP_ENABLED: 'false',
+        ENABLE_SIMULATOR: 'true',
+      }),
+    ).toThrow(/ENABLE_SIMULATOR/);
   });
 
   it('sets security headers on responses', async () => {
@@ -117,12 +132,12 @@ describe('Security and configuration', () => {
     const response = await app.inject({
       method: 'GET',
       url: '/api/operator/overview',
-      headers: { 'x-request-id': 'req-stage9-fixed' },
+      headers: { 'x-request-id': 'req-security-fixed' },
     });
     expect(response.statusCode).toBe(401);
-    expect(response.headers['x-request-id']).toBe('req-stage9-fixed');
+    expect(response.headers['x-request-id']).toBe('req-security-fixed');
     const body = ErrorEnvelopeSchema.parse(response.json());
-    expect(body.error.requestId).toBe('req-stage9-fixed');
+    expect(body.error.requestId).toBe('req-security-fixed');
   });
 
   it('rejects oversized JSON bodies', async () => {
@@ -196,7 +211,7 @@ describe('Security and configuration', () => {
     const response = await app.inject({
       method: 'GET',
       url: '/api/operator/conversations',
-      headers: { authorization: 'Bearer stage9-admin-token' },
+      headers: { authorization: 'Bearer security-admin-token' },
     });
     expect(response.statusCode).toBe(200);
     const body = response.json() as {

@@ -49,6 +49,10 @@ describe('ConfirmationPolicy', () => {
     'thanks',
     '',
     '   ',
+    'y',
+    'ha',
+    'ji',
+    'book',
   ])('marks unclear responses as ambiguous: %s', (message) => {
     expect(policy.evaluate(message)).toBe('AMBIGUOUS');
   });

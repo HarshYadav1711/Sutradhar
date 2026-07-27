@@ -2,7 +2,6 @@ export type ConfirmationDecision = 'CONFIRMED' | 'REJECTED' | 'AMBIGUOUS';
 
 const CONFIRM_PHRASES = [
   'yes',
-  'y',
   'yeah',
   'yep',
   'confirm',
@@ -13,15 +12,12 @@ const CONFIRM_PHRASES = [
   'yeah confirm',
   'yeah confirm it',
   'book it',
-  'book',
   'go ahead',
   'yes please',
   'please confirm',
   'haan',
   'han',
-  'ha',
   'haji',
-  'ji',
   'kar do',
   'confirm kar do',
   'book kar do',

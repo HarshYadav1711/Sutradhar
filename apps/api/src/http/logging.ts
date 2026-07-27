@@ -4,6 +4,8 @@ const REDACT_PATHS = [
   'req.headers.authorization',
   'req.headers["authorization"]',
   'req.headers["x-hub-signature-256"]',
+  'req.query["hub.verify_token"]',
+  'req.query.hub.verify_token',
   'headers.authorization',
   'headers["authorization"]',
   'headers["x-hub-signature-256"]',

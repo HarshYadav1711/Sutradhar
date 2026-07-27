@@ -6,9 +6,11 @@ import {
   evaluatePendingActionGate,
   explicitConfirmationPrompt,
   pendingCancelledPrompt,
+  pendingCommitFailedPrompt,
   pendingExpiredPrompt,
 } from '../domain/pending-action-gate.js';
 import { PendingActionExecutor } from '../domain/pending-action-executor.js';
+import { isDomainError } from '../domain/errors.js';
 import type { ToolRegistry } from '../tools/registry.js';
 import type { ToolExecutionContext } from '../tools/types.js';
 import { ContextBuilder } from './context-builder.js';
@@ -169,19 +171,74 @@ export class AgentOrchestrator {
       }
     }
 
-    const inbound = await this.db.message.create({
-      data: {
-        conversationId: conversation.id,
-        externalMessageId: input.externalMessageId ?? null,
-        direction: 'INBOUND',
-        messageType: 'TEXT',
-        content: input.text,
-        metadata: {
-          channel: input.channel ?? 'test',
-          ...(input.requestId ? { requestId: input.requestId } : {}),
+    let inbound;
+    try {
+      inbound = await this.db.message.create({
+        data: {
+          conversationId: conversation.id,
+          externalMessageId: input.externalMessageId ?? null,
+          direction: 'INBOUND',
+          messageType: 'TEXT',
+          content: input.text,
+          metadata: {
+            channel: input.channel ?? 'test',
+            ...(input.requestId ? { requestId: input.requestId } : {}),
+          },
         },
-      },
-    });
+      });
+    } catch (error) {
+      if (
+        input.externalMessageId &&
+        error instanceof Error &&
+        'code' in error &&
+        (error as { code?: string }).code === 'P2002'
+      ) {
+        const existing = await this.db.message.findUnique({
+          where: { externalMessageId: input.externalMessageId },
+        });
+        if (existing) {
+          await this.recordEvent(
+            conversation.id,
+            'DUPLICATE_INBOUND_IGNORED',
+            'Duplicate external message id',
+            { externalMessageId: input.externalMessageId },
+          );
+          recordedEvents.push({
+            eventType: 'DUPLICATE_INBOUND_IGNORED',
+            detail: 'Duplicate external message id',
+          });
+          const latestOutbound = await this.db.message.findFirst({
+            where: {
+              conversationId: conversation.id,
+              direction: 'OUTBOUND',
+              createdAt: { gte: existing.createdAt },
+            },
+            orderBy: { createdAt: 'asc' },
+          });
+          const current = await this.db.conversation.findUniqueOrThrow({
+            where: { id: conversation.id },
+          });
+          return {
+            outcome: 'DUPLICATE_IGNORED',
+            conversationId: conversation.id,
+            customerId: customer.id,
+            inboundMessageId: existing.id,
+            outboundMessageId: latestOutbound?.id ?? null,
+            outboundText: latestOutbound?.content ?? null,
+            conversationStatus: assertKnownConversationStatus(current.status),
+            bookingId: current.activeBookingId,
+            bookingReference: null,
+            handoffId: null,
+            handoffReference: null,
+            pendingActionId: null,
+            stepsUsed: 0,
+            operationalEvents: recordedEvents,
+            duplicated: true,
+          };
+        }
+      }
+      throw error;
+    }
 
     await this.db.conversation.update({
       where: { id: conversation.id },
@@ -295,55 +352,96 @@ export class AgentOrchestrator {
     }
 
     if (gate === 'COMMIT') {
-      const committed = await this.pendingExecutor.commit({
-        pendingActionId: pending.id,
-        confirmationMessageId: input.inboundMessageId,
-        now: input.now,
-      });
+      try {
+        const committed = await this.pendingExecutor.commit({
+          pendingActionId: pending.id,
+          confirmationMessageId: input.inboundMessageId,
+          now: input.now,
+        });
 
-      const event: ConversationTransitionEvent =
-        committed.type === 'CREATE_BOOKING' ? 'BOOKING_CONFIRMED' : 'RESCHEDULE_CONFIRMED';
-      await this.applyConversationEvent(input.conversationId, event, input.now);
+        const event: ConversationTransitionEvent =
+          committed.type === 'CREATE_BOOKING' ? 'BOOKING_CONFIRMED' : 'RESCHEDULE_CONFIRMED';
+        await this.applyConversationEvent(input.conversationId, event, input.now);
 
-      const outboundText =
-        committed.type === 'CREATE_BOOKING'
-          ? bookingCommittedMessage({
-              reference: committed.booking.reference,
-              languageStyle: input.languageStyle,
-            })
-          : rescheduleCommittedMessage({
-              reference: committed.booking.reference,
-              languageStyle: input.languageStyle,
-            });
+        const outboundText =
+          committed.type === 'CREATE_BOOKING'
+            ? bookingCommittedMessage({
+                reference: committed.booking.reference,
+                languageStyle: input.languageStyle,
+              })
+            : rescheduleCommittedMessage({
+                reference: committed.booking.reference,
+                languageStyle: input.languageStyle,
+              });
 
-      await this.pushEvent(
-        input.recordedEvents,
-        input.conversationId,
-        committed.type === 'CREATE_BOOKING' ? 'BOOKING_COMMITTED' : 'RESCHEDULE_COMMITTED',
-        committed.booking.reference,
-        { bookingId: committed.booking.id },
-      );
+        await this.pushEvent(
+          input.recordedEvents,
+          input.conversationId,
+          committed.type === 'CREATE_BOOKING' ? 'BOOKING_COMMITTED' : 'RESCHEDULE_COMMITTED',
+          committed.booking.reference,
+          { bookingId: committed.booking.id },
+        );
 
-      await this.updateSummary(
-        input.conversationId,
-        committed.type === 'CREATE_BOOKING'
-          ? `Booking confirmed ${committed.booking.reference}`
-          : `Reschedule confirmed ${committed.booking.reference}`,
-      );
+        await this.updateSummary(
+          input.conversationId,
+          committed.type === 'CREATE_BOOKING'
+            ? `Booking confirmed ${committed.booking.reference}`
+            : `Reschedule confirmed ${committed.booking.reference}`,
+        );
 
-      return this.finalizeDirectResponse({
-        ...input,
-        outboundText,
-        outcome: 'CUSTOMER_RESPONSE',
-        bookingId: committed.booking.id,
-        bookingReference: committed.booking.reference,
-        pendingActionId: pending.id,
-        stepsUsed: 0,
-      });
+        return this.finalizeDirectResponse({
+          ...input,
+          outboundText,
+          outcome: 'CUSTOMER_RESPONSE',
+          bookingId: committed.booking.id,
+          bookingReference: committed.booking.reference,
+          pendingActionId: pending.id,
+          stepsUsed: 0,
+        });
+      } catch (error) {
+        if (!isDomainError(error)) {
+          throw error;
+        }
+
+        await this.db.pendingAction.updateMany({
+          where: { id: pending.id, status: 'PENDING' },
+          data: { status: 'CANCELLED', version: { increment: 1 } },
+        });
+        await this.applyConversationEvent(input.conversationId, 'PENDING_SUPERSEDED', input.now);
+        await this.pushEvent(
+          input.recordedEvents,
+          input.conversationId,
+          'BOOKING_REJECTED',
+          pending.id,
+          { reason: error.code, detail: error.message },
+        );
+        await this.updateSummary(
+          input.conversationId,
+          `Pending confirmation failed: ${error.code}`,
+        );
+
+        return this.finalizeDirectResponse({
+          ...input,
+          outboundText: pendingCommitFailedPrompt(input.languageStyle),
+          outcome: 'CUSTOMER_RESPONSE',
+          pendingActionId: pending.id,
+          stepsUsed: 0,
+        });
+      }
     }
 
     if (gate === 'CANCEL') {
-      await this.pendingExecutor.cancel(pending.id);
+      try {
+        await this.pendingExecutor.cancel(pending.id);
+      } catch (error) {
+        if (!isDomainError(error)) {
+          throw error;
+        }
+        await this.db.pendingAction.updateMany({
+          where: { id: pending.id, status: 'PENDING' },
+          data: { status: 'CANCELLED', version: { increment: 1 } },
+        });
+      }
       const rejectEvent: ConversationTransitionEvent =
         pending.actionType === 'RESCHEDULE_BOOKING' ? 'RESCHEDULE_REJECTED' : 'BOOKING_REJECTED';
       await this.applyConversationEvent(input.conversationId, rejectEvent, input.now);

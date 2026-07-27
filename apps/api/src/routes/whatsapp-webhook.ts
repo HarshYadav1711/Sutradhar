@@ -95,13 +95,27 @@ export async function registerWhatsAppWebhookRoutes(
         );
       }
 
-      const events: NormalizedWhatsAppEvent[] = (() => {
-        try {
-          return deps.inbox.normalize(request.body);
-        } catch {
-          return [];
-        }
-      })();
+      let events: NormalizedWhatsAppEvent[];
+      try {
+        events = deps.inbox.normalize(request.body);
+      } catch (error) {
+        request.log.error(
+          {
+            err: {
+              name: error instanceof Error ? error.name : 'Error',
+              message: error instanceof Error ? error.message : String(error),
+            },
+          },
+          'WhatsApp webhook normalisation failed',
+        );
+        return sendError(
+          reply,
+          request,
+          500,
+          'WEBHOOK_NORMALIZE_FAILED',
+          'Unable to normalise WhatsApp webhook payload',
+        );
+      }
 
       const enqueue = await deps.inbox.enqueueNormalizedEvents(events);
 

@@ -1,6 +1,14 @@
-import 'dotenv/config';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
+import { config as loadDotenv } from 'dotenv';
 import { defineConfig, env } from 'prisma/config';
+
+const apiRoot = path.dirname(fileURLToPath(import.meta.url));
+const repoRoot = path.resolve(apiRoot, '../..');
+
+loadDotenv({ path: path.join(apiRoot, '.env') });
+loadDotenv({ path: path.join(repoRoot, '.env') });
 
 export default defineConfig({
   schema: 'prisma/schema.prisma',

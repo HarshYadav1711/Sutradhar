@@ -34,12 +34,22 @@ export const prepareRescheduleTool: AgentTool<typeof inputSchema, unknown> = {
       throw new DomainValidationError('Cannot reschedule another customer booking');
     }
 
+    if (booking.status !== 'CONFIRMED' && booking.status !== 'RESCHEDULED') {
+      throw new DomainValidationError('Only confirmed bookings can be rescheduled');
+    }
+
     const conversation = await context.db.conversation.findUnique({
       where: { id: context.conversationId },
     });
 
     if (!conversation || conversation.customerId !== context.customerId) {
       throw new DomainValidationError('Conversation does not belong to this customer');
+    }
+
+    if (conversation.status === 'HANDED_OFF') {
+      throw new DomainValidationError(
+        'Cannot prepare a reschedule while the conversation is handed off',
+      );
     }
 
     const newSlot = await context.db.availabilitySlot.findUnique({
@@ -82,7 +92,6 @@ export const prepareRescheduleTool: AgentTool<typeof inputSchema, unknown> = {
         where: {
           conversationId: context.conversationId,
           status: 'PENDING',
-          actionType: 'RESCHEDULE_BOOKING',
         },
         data: {
           status: 'CANCELLED',

@@ -298,7 +298,11 @@ describe('API integration', () => {
     const beforeServices = await prisma.service.count();
     expect(beforeServices).toBeGreaterThan(0);
 
-    const reset = await app.inject({ method: 'POST', url: '/api/simulator/reset' });
+    const reset = await app.inject({
+      method: 'POST',
+      url: '/api/simulator/reset',
+      headers: { authorization: `Bearer ${ADMIN_TOKEN}` },
+    });
     expect(reset.statusCode).toBe(200);
     const resetBody = DemoResetResponseSchema.parse(reset.json());
     expect(resetBody.ok).toBe(true);

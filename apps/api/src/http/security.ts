@@ -50,7 +50,7 @@ export async function registerSecurityHooks(
     // Health probes should not consume the shared budget.
     allowList: (request) => {
       const url = request.url.split('?')[0] ?? request.url;
-      return url === '/health' || url === '/ready';
+      return url === '/health' || url === '/ready' || url === '/webhooks/whatsapp';
     },
     errorResponseBuilder: (request, context) => ({
       error: {

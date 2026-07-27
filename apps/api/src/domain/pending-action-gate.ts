@@ -102,3 +102,10 @@ export function pendingCancelledPrompt(languageStyle: 'en' | 'hinglish' = 'en'):
   }
   return 'Okay, I cancelled that proposal. Tell me what you need next.';
 }
+
+export function pendingCommitFailedPrompt(languageStyle: 'en' | 'hinglish' = 'en'): string {
+  if (languageStyle === 'hinglish') {
+    return 'Woh proposal ab confirm nahi ho sakta — slot available nahi raha ya state change ho gaya. Naya request bhejein.';
+  }
+  return 'That proposal can no longer be confirmed — the slot is unavailable or the state changed. Please send a new request.';
+}

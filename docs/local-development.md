@@ -15,7 +15,7 @@ From the repository root:
 
 ```bash
 npm ci
-cp .env.example .env
+cp .env.example apps/api/.env
 ```
 
 Set at least:
@@ -30,6 +30,8 @@ OLLAMA_MODEL=qwen3:4b
 DATABASE_URL=file:./prisma/dev.db
 CORS_ORIGIN=http://localhost:5173
 ```
+
+A root `.env` is loaded as a fallback, but workspace/Prisma commands expect `apps/api/.env`.
 
 Optional dashboard override:
 
@@ -114,7 +116,7 @@ curl -s http://localhost:4000/api/simulator/messages \
   -d "{\"customerKey\":\"simulator:docs\",\"text\":\"I need AC servicing tomorrow evening\",\"startFresh\":true}"
 ```
 
-Reset simulator conversation state for a customer through the API when needed via `POST /api/simulator/reset` (admin not required for simulator routes; simulator must be enabled).
+Reset a single customer conversation by sending `startFresh: true` on `POST /api/simulator/messages`. Full catalogue reseed is `npm run demo:reset` or authenticated `POST /api/simulator/reset` (requires `ADMIN_API_TOKEN` when that token is configured).
 
 ## Operator console
 

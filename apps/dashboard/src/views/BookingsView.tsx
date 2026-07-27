@@ -59,7 +59,7 @@ export function BookingsView({ client }: BookingsViewProps) {
   const { refresh } = usePolling(load, { intervalMs: 4000 });
 
   if (loading && !data) {
-    return <StatePanel title="Loading bookings" body="Fetching confirmed and pending bookings." />;
+    return <StatePanel title="Loading bookings" body="Fetching confirmed bookings from the operator API." />;
   }
 
   if (error && !data) {

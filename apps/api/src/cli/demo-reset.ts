@@ -1,4 +1,4 @@
-import 'dotenv/config';
+import '../load-env.js';
 
 import { loadConfig } from '../config.js';
 import { createPrismaClient } from '../db/client.js';

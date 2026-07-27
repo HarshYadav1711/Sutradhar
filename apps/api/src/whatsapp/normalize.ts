@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto';
+
 export type NormalizedWhatsAppTextMessage = {
   kind: 'text_message';
   externalKey: string;
@@ -60,6 +62,16 @@ function asString(value: unknown): string | null {
   return typeof value === 'string' && value.trim() !== '' ? value.trim() : null;
 }
 
+function stableIgnoredKey(reason: string, parts: Array<string | null | undefined>): string {
+  const digest = createHash('sha256')
+    .update(reason)
+    .update('\0')
+    .update(parts.map((part) => part ?? '').join('\0'))
+    .digest('hex')
+    .slice(0, 24);
+  return `ignored:${reason}:${digest}`;
+}
+
 /**
  * Normalises Meta WhatsApp Cloud API webhook payloads into typed events.
  * Unknown shapes are ignored without throwing.
@@ -70,7 +82,7 @@ export function normalizeWhatsAppWebhookPayload(payload: unknown): NormalizedWha
     return [
       {
         kind: 'ignored',
-        externalKey: `ignored:invalid-root:${Date.now()}`,
+        externalKey: stableIgnoredKey('payload_not_object', ['root']),
         reason: 'payload_not_object',
         metadata: {},
       },
@@ -138,7 +150,12 @@ export function normalizeWhatsAppWebhookPayload(payload: unknown): NormalizedWha
         if (!externalMessageId || !waId) {
           events.push({
             kind: 'ignored',
-            externalKey: `ignored:message-missing-ids:${Date.now()}:${events.length}`,
+            externalKey: stableIgnoredKey('message_missing_ids', [
+              messageType,
+              String(messageRecord.id ?? ''),
+              String(messageRecord.from ?? ''),
+              String(events.length),
+            ]),
             reason: 'message_missing_ids',
             metadata: { messageType },
           });
@@ -207,7 +224,11 @@ export function normalizeWhatsAppWebhookPayload(payload: unknown): NormalizedWha
         if (!statusId) {
           events.push({
             kind: 'ignored',
-            externalKey: `ignored:status-missing-id:${Date.now()}:${events.length}`,
+            externalKey: stableIgnoredKey('status_missing_id', [
+              statusValue,
+              String(statusRecord.recipient_id ?? ''),
+              String(events.length),
+            ]),
             reason: 'status_missing_id',
             metadata: { status: statusValue },
           });
@@ -233,7 +254,10 @@ export function normalizeWhatsAppWebhookPayload(payload: unknown): NormalizedWha
   if (events.length === 0) {
     events.push({
       kind: 'ignored',
-      externalKey: `ignored:empty:${Date.now()}`,
+      externalKey: stableIgnoredKey('no_supported_events', [
+        String(root.object ?? ''),
+        String(asArray(root.entry).length),
+      ]),
       reason: 'no_supported_events',
       metadata: {},
     });
