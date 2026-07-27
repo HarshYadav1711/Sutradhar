@@ -151,7 +151,7 @@ Dashboard API base URL (optional override):
 cp apps/dashboard/.env.example apps/dashboard/.env
 ```
 
-Default is `VITE_API_BASE_URL=http://localhost:4000`.
+Default is `VITE_API_BASE_URL=http://127.0.0.1:4000` (prefer `127.0.0.1` over `localhost` on Windows to avoid IPv6 connection failures).
 
 ## Run locally
 

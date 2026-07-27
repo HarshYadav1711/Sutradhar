@@ -32,7 +32,7 @@ const AppConfigSchema = z
     DATABASE_URL: nonEmptyString,
     BUSINESS_TIMEZONE: nonEmptyString.default('Asia/Kolkata'),
     BUSINESS_CURRENCY: nonEmptyString.default('INR'),
-    CORS_ORIGIN: nonEmptyString.default('http://localhost:5173'),
+    CORS_ORIGIN: nonEmptyString.default('http://localhost:5173,http://127.0.0.1:5173'),
     /** Empty means operator APIs refuse requests (503). Never defaults to a shared secret. */
     ADMIN_API_TOKEN: z.string().default(''),
     ENABLE_SIMULATOR: booleanFromEnv.default(true),

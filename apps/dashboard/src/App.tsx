@@ -74,7 +74,9 @@ export function App() {
             setAuthError(
               error instanceof ApiClientError
                 ? error.message
-                : 'Unable to authenticate with the operator API',
+                : error instanceof Error
+                  ? error.message
+                  : 'Unable to authenticate with the operator API',
             );
           }
         }}

@@ -128,4 +128,10 @@ Expected behaviour:
 | `401 UNAUTHORIZED` | Missing/wrong bearer token in the dashboard sign-in field |
 | `503 ADMIN_TOKEN_UNCONFIGURED` | `.env` has empty `ADMIN_API_TOKEN` |
 
-Fix: set `ADMIN_API_TOKEN` in API `.env`, restart API, sign in with the exact same value. Confirm `VITE_API_BASE_URL` points at the API (`http://localhost:4000`) and `CORS_ORIGIN` includes `http://localhost:5173`.
+Fix:
+
+1. Set a non-empty `ADMIN_API_TOKEN` in `apps/api/.env` and restart the API so it reloads env.
+2. Sign in with that exact value.
+3. On Windows, prefer `VITE_API_BASE_URL=http://127.0.0.1:4000` (see `apps/dashboard/.env`). Browsers resolving `localhost` to IPv6 (`::1`) can fail while the API listens on IPv4 only — the UI then shows a generic “Unable to authenticate” message.
+4. Ensure `CORS_ORIGIN` includes both `http://localhost:5173` and `http://127.0.0.1:5173`.
+5. Hard-refresh the dashboard (Ctrl+Shift+R) after changing Vite env.

@@ -47,7 +47,7 @@ function resolveBaseUrl(explicit?: string): string {
   if (typeof fromEnv === 'string' && fromEnv.trim() !== '') {
     return fromEnv.replace(/\/$/, '');
   }
-  return 'http://localhost:4000';
+  return 'http://127.0.0.1:4000';
 }
 
 function buildQuery(params: Record<string, string | number | undefined>): string {
@@ -70,7 +70,9 @@ export class OperatorApiClient {
 
   constructor(options: OperatorApiClientOptions = {}) {
     this.baseUrl = resolveBaseUrl(options.baseUrl);
-    this.fetchImpl = options.fetchImpl ?? fetch;
+    // Wrap global fetch — extracting `window.fetch` and calling it unbound throws
+    // "Illegal invocation" in browsers.
+    this.fetchImpl = options.fetchImpl ?? ((input, init) => globalThis.fetch(input, init));
     this.getToken = options.getToken ?? readOperatorToken;
     this.onUnauthorized = options.onUnauthorized;
   }
