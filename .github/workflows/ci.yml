@@ -14,6 +14,9 @@ jobs:
     name: Lint, typecheck, test, build
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      # Prisma config requires DATABASE_URL even for `prisma generate` (no .env in CI).
+      DATABASE_URL: file:./prisma/ci.db
 
     steps:
       - name: Checkout
