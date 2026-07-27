@@ -140,7 +140,7 @@
 
 .buttonDanger {
   color: var(--danger);
-  border-color: color-mix(in srgb, var(--danger) 35%, var(--line));
+  border-color: var(--danger-border);
 }
 
 .field {
@@ -251,7 +251,7 @@
   text-transform: uppercase;
   color: var(--muted);
   font-weight: 600;
-  background: color-mix(in srgb, var(--bg) 70%, var(--surface));
+  background: var(--row-header);
 }
 
 .table tr:last-child td {
@@ -259,7 +259,7 @@
 }
 
 .table tbody tr:hover td {
-  background: color-mix(in srgb, var(--bg) 55%, var(--surface));
+  background: var(--row-hover);
 }
 
 .rowLink {
@@ -283,25 +283,25 @@
 
 .badgeOk {
   background: var(--ok-soft);
-  border-color: color-mix(in srgb, var(--ok) 30%, var(--line));
+  border-color: var(--ok-border);
   color: var(--ok);
 }
 
 .badgeWarn {
   background: var(--warn-soft);
-  border-color: color-mix(in srgb, var(--warn) 30%, var(--line));
+  border-color: var(--warn-border);
   color: var(--warn);
 }
 
 .badgeDanger {
   background: var(--danger-soft);
-  border-color: color-mix(in srgb, var(--danger) 30%, var(--line));
+  border-color: var(--danger-border);
   color: var(--danger);
 }
 
 .badgeAccent {
   background: var(--accent-soft);
-  border-color: color-mix(in srgb, var(--accent) 30%, var(--line));
+  border-color: var(--accent-border);
   color: var(--accent);
 }
 
@@ -392,7 +392,7 @@
 
 .messageOutbound {
   background: var(--accent-soft);
-  border-color: color-mix(in srgb, var(--accent) 25%, var(--line));
+  border-color: var(--accent-border-soft);
 }
 
 .messageMeta {
