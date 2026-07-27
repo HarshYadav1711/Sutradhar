@@ -9,6 +9,7 @@
     "start": "node dist/server.js",
     "typecheck": "prisma generate && tsc -p tsconfig.json --noEmit",
     "test": "prisma generate && vitest run",
+    "test:coverage": "prisma generate && vitest run --coverage",
     "chat": "tsx src/cli/chat.ts",
     "demo:reset": "tsx src/cli/demo-reset.ts",
     "db:generate": "prisma generate",
@@ -32,6 +33,7 @@
   "devDependencies": {
     "@types/better-sqlite3": "7.6.13",
     "@types/node": "26.1.1",
+    "@vitest/coverage-v8": "4.1.10",
     "prisma": "7.9.0",
     "tsx": "4.23.1",
     "typescript": "6.0.3",

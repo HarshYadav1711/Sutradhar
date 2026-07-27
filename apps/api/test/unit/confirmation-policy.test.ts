@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { ConfirmationPolicy } from '../src/domain/confirmation-policy.js';
+import { ConfirmationPolicy } from '../../src/domain/confirmation-policy.js';
 
 describe('ConfirmationPolicy', () => {
   const policy = new ConfirmationPolicy();
@@ -18,11 +18,23 @@ describe('ConfirmationPolicy', () => {
     'han',
     'kar do',
     'confirm kar do',
+    'Haan, kar do',
+    'haan kar do',
   ])('confirms explicit affirmation: %s', (message) => {
     expect(policy.evaluate(message)).toBe('CONFIRMED');
   });
 
-  it.each(['no', 'cancel', 'do not book', "don't book", 'nahi', 'mat karo', 'NOPE'])(
+  it.each([
+    'no',
+    'cancel',
+    'do not book',
+    "don't book",
+    'nahi',
+    'mat karo',
+    'NOPE',
+    'Nahi, cancel',
+    'nahi cancel',
+  ])(
     'rejects explicit rejection: %s',
     (message) => {
       expect(policy.evaluate(message)).toBe('REJECTED');

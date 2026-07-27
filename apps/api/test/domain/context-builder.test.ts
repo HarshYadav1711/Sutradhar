@@ -4,11 +4,11 @@ import {
   AGENT_SYSTEM_INSTRUCTION,
   ContextBuilder,
   DEFAULT_RECENT_MESSAGE_LIMIT,
-} from '../src/agent/index.js';
-import type { PrismaClient } from '../src/db/client.js';
-import { createAgentToolRegistry } from '../src/tools/index.js';
-import { createTestDatabase } from './helpers/db.js';
-import { seedConversationFixture } from './helpers/fixtures.js';
+} from '../../src/agent/index.js';
+import type { PrismaClient } from '../../src/db/client.js';
+import { createAgentToolRegistry } from '../../src/tools/index.js';
+import { createTestDatabase } from '../helpers/db.js';
+import { seedConversationFixture } from '../helpers/fixtures.js';
 
 describe('ContextBuilder', () => {
   let prisma: PrismaClient;

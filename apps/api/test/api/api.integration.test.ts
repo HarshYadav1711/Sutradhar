@@ -12,13 +12,13 @@ import {
   SimulatorMessageResponseSchema,
 } from '@sutradhar/contracts';
 
-import { buildApp, type App } from '../src/app.js';
-import { loadConfig } from '../src/config.js';
-import { ScriptedModelProvider } from '../src/agent/model/scripted-provider.js';
-import type { ScriptedModelResponse } from '../src/agent/model/scripted-provider.js';
-import type { PrismaClient } from '../src/db/client.js';
-import { createTestDatabase } from './helpers/db.js';
-import { dateKeyInTimeZone, seedConversationFixture } from './helpers/fixtures.js';
+import { buildApp, type App } from '../../src/app.js';
+import { loadConfig } from '../../src/config.js';
+import { ScriptedModelProvider } from '../../src/agent/model/scripted-provider.js';
+import type { ScriptedModelResponse } from '../../src/agent/model/scripted-provider.js';
+import type { PrismaClient } from '../../src/db/client.js';
+import { createTestDatabase } from '../helpers/db.js';
+import { dateKeyInTimeZone, seedConversationFixture } from '../helpers/fixtures.js';
 
 const NOW = new Date('2026-07-27T04:00:00.000Z');
 const ADMIN_TOKEN = 'test-admin-token-stage6';

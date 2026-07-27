@@ -5,7 +5,7 @@ import {
   assertKnownConversationStatus,
   canTransitionConversationStatus,
   transitionConversationStatus,
-} from '../src/agent/conversation-state.js';
+} from '../../src/agent/conversation-state.js';
 
 describe('conversation state machine', () => {
   it('allows the primary booking path', () => {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { AGENT_SYSTEM_INSTRUCTION } from '../src/agent/index.js';
+import { AGENT_SYSTEM_INSTRUCTION } from '../../src/agent/index.js';
 
 describe('AGENT_SYSTEM_INSTRUCTION', () => {
   it('does not request chain-of-thought or hidden reasoning', () => {

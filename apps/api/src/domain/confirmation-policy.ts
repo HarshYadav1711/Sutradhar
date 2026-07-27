@@ -48,6 +48,8 @@ const REJECT_PHRASES = [
   "don't confirm",
   'nahi',
   'nahin',
+  'nahi cancel',
+  'nahin cancel',
   'mat karo',
   'mat karna',
   'cancel kar do',

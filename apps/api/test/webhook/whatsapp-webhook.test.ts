@@ -1,12 +1,12 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { buildApp, type App } from '../src/app.js';
-import { loadConfig } from '../src/config.js';
-import { ScriptedModelProvider } from '../src/agent/model/scripted-provider.js';
-import type { PrismaClient } from '../src/db/client.js';
-import { WhatsAppClient } from '../src/whatsapp/client.js';
-import { createTestWhatsAppSignature } from '../src/whatsapp/signature.js';
-import { createTestDatabase } from './helpers/db.js';
+import { buildApp, type App } from '../../src/app.js';
+import { loadConfig } from '../../src/config.js';
+import { ScriptedModelProvider } from '../../src/agent/model/scripted-provider.js';
+import type { PrismaClient } from '../../src/db/client.js';
+import { WhatsAppClient } from '../../src/whatsapp/client.js';
+import { createTestWhatsAppSignature } from '../../src/whatsapp/signature.js';
+import { createTestDatabase } from '../helpers/db.js';
 
 const APP_SECRET = 'test-meta-app-secret';
 const VERIFY_TOKEN = 'test-verify-token';

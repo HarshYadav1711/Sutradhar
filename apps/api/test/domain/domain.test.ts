@@ -1,10 +1,10 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { seedDatabase } from '../src/db/seed.js';
-import { DomainConflictError } from '../src/domain/errors.js';
-import { createRepositories } from '../src/repositories/index.js';
-import type { PrismaClient } from '../src/db/client.js';
-import { createTestDatabase } from './helpers/db.js';
+import { seedDatabase } from '../../src/db/seed.js';
+import { DomainConflictError } from '../../src/domain/errors.js';
+import { createRepositories } from '../../src/repositories/index.js';
+import type { PrismaClient } from '../../src/db/client.js';
+import { createTestDatabase } from '../helpers/db.js';
 
 describe('domain persistence', () => {
   let prisma: PrismaClient;

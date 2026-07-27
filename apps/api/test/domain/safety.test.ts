@@ -1,11 +1,11 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { ConfirmationPolicy } from '../src/domain/confirmation-policy.js';
-import { DomainConflictError, DomainExpiredError } from '../src/domain/errors.js';
-import { PendingActionExecutor } from '../src/domain/pending-action-executor.js';
-import type { PrismaClient } from '../src/db/client.js';
-import { createTestDatabase } from './helpers/db.js';
-import { seedConversationFixture } from './helpers/fixtures.js';
+import { ConfirmationPolicy } from '../../src/domain/confirmation-policy.js';
+import { DomainConflictError, DomainExpiredError } from '../../src/domain/errors.js';
+import { PendingActionExecutor } from '../../src/domain/pending-action-executor.js';
+import type { PrismaClient } from '../../src/db/client.js';
+import { createTestDatabase } from '../helpers/db.js';
+import { seedConversationFixture } from '../helpers/fixtures.js';
 
 describe('confirmation-gated write safety', () => {
   let prisma: PrismaClient;

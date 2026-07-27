@@ -1,12 +1,12 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { AgentOrchestrator } from '../src/agent/orchestrator.js';
-import { ScriptedModelProvider } from '../src/agent/model/scripted-provider.js';
-import type { PrismaClient } from '../src/db/client.js';
-import { createAgentToolRegistry } from '../src/tools/index.js';
-import { WhatsAppClient, WhatsAppClientError } from '../src/whatsapp/client.js';
-import { WebhookInboxService } from '../src/whatsapp/inbox.js';
-import { createTestDatabase } from './helpers/db.js';
+import { AgentOrchestrator } from '../../src/agent/orchestrator.js';
+import { ScriptedModelProvider } from '../../src/agent/model/scripted-provider.js';
+import type { PrismaClient } from '../../src/db/client.js';
+import { createAgentToolRegistry } from '../../src/tools/index.js';
+import { WhatsAppClient, WhatsAppClientError } from '../../src/whatsapp/client.js';
+import { WebhookInboxService } from '../../src/whatsapp/inbox.js';
+import { createTestDatabase } from '../helpers/db.js';
 
 describe('WhatsApp durable inbox worker', () => {
   let prisma: PrismaClient;

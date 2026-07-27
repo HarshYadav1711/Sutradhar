@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { verifyWhatsAppSubscription } from '../src/whatsapp/verify.js';
+import { verifyWhatsAppSubscription } from '../../src/whatsapp/verify.js';
 
 describe('WhatsApp webhook verification helper', () => {
   it('returns the challenge for a valid subscribe request', () => {

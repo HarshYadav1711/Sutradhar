@@ -1,11 +1,11 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { HealthResponseSchema, ReadyResponseSchema } from '@sutradhar/contracts';
 
-import { buildApp, type App } from '../src/app.js';
-import { loadTestConfig } from '../src/config.js';
-import { ScriptedModelProvider } from '../src/agent/model/scripted-provider.js';
-import type { PrismaClient } from '../src/db/client.js';
-import { createTestDatabase } from './helpers/db.js';
+import { buildApp, type App } from '../../src/app.js';
+import { loadTestConfig } from '../../src/config.js';
+import { ScriptedModelProvider } from '../../src/agent/model/scripted-provider.js';
+import type { PrismaClient } from '../../src/db/client.js';
+import { createTestDatabase } from '../helpers/db.js';
 
 describe('GET /health and /ready', () => {
   let app: App;

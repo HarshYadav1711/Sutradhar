@@ -4,8 +4,8 @@ import {
   AGENT_SYSTEM_INSTRUCTION,
   mapModelRequestToOllamaPayload,
   OllamaModelProvider,
-} from '../src/agent/index.js';
-import type { ModelRequest } from '../src/agent/model/types.js';
+} from '../../src/agent/index.js';
+import type { ModelRequest } from '../../src/agent/model/types.js';
 
 function createRequest(): ModelRequest {
   return {

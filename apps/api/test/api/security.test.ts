@@ -1,13 +1,13 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { ErrorEnvelopeSchema, ReadyResponseSchema } from '@sutradhar/contracts';
 
-import { buildApp, type App } from '../src/app.js';
-import { ConfigurationError, loadConfig, loadTestConfig } from '../src/config.js';
-import { ScriptedModelProvider } from '../src/agent/model/scripted-provider.js';
-import type { PrismaClient } from '../src/db/client.js';
-import { maskWhatsAppNumber } from '../src/http/privacy.js';
-import { toPublicErrorBody } from '../src/http/errors.js';
-import { createTestDatabase } from './helpers/db.js';
+import { buildApp, type App } from '../../src/app.js';
+import { ConfigurationError, loadConfig, loadTestConfig } from '../../src/config.js';
+import { ScriptedModelProvider } from '../../src/agent/model/scripted-provider.js';
+import type { PrismaClient } from '../../src/db/client.js';
+import { maskWhatsAppNumber } from '../../src/http/privacy.js';
+import { toPublicErrorBody } from '../../src/http/errors.js';
+import { createTestDatabase } from '../helpers/db.js';
 
 describe('Stage 9 security and configuration', () => {
   let app: App;

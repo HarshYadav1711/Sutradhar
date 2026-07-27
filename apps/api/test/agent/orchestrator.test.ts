@@ -1,12 +1,12 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { AgentOrchestrator } from '../src/agent/orchestrator.js';
-import { ScriptedModelProvider } from '../src/agent/model/scripted-provider.js';
-import type { ScriptedModelResponse } from '../src/agent/model/scripted-provider.js';
-import type { PrismaClient } from '../src/db/client.js';
-import { createAgentToolRegistry } from '../src/tools/index.js';
-import { createTestDatabase } from './helpers/db.js';
-import { dateKeyInTimeZone, seedConversationFixture } from './helpers/fixtures.js';
+import { AgentOrchestrator } from '../../src/agent/orchestrator.js';
+import { ScriptedModelProvider } from '../../src/agent/model/scripted-provider.js';
+import type { ScriptedModelResponse } from '../../src/agent/model/scripted-provider.js';
+import type { PrismaClient } from '../../src/db/client.js';
+import { createAgentToolRegistry } from '../../src/tools/index.js';
+import { createTestDatabase } from '../helpers/db.js';
+import { dateKeyInTimeZone, seedConversationFixture } from '../helpers/fixtures.js';
 
 const NOW = new Date('2026-07-27T04:00:00.000Z');
 

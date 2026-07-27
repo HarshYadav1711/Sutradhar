@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { ScriptedModelProvider } from '../src/agent/index.js';
-import type { ModelRequest } from '../src/agent/model/types.js';
+import { ScriptedModelProvider } from '../../src/agent/index.js';
+import type { ModelRequest } from '../../src/agent/model/types.js';
 
 const request: ModelRequest = {
   systemInstruction: 'test',

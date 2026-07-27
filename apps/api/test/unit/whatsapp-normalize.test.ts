@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { normalizeWhatsAppWebhookPayload } from '../src/whatsapp/normalize.js';
+import { normalizeWhatsAppWebhookPayload } from '../../src/whatsapp/normalize.js';
 
 describe('WhatsApp webhook normalisation', () => {
   it('normalises inbound text messages', () => {

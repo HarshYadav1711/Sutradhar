@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { ConfirmationPolicy } from '../src/domain/confirmation-policy.js';
-import { evaluatePendingActionGate } from '../src/domain/pending-action-gate.js';
+import { ConfirmationPolicy } from '../../src/domain/confirmation-policy.js';
+import { evaluatePendingActionGate } from '../../src/domain/pending-action-gate.js';
 import {
   getMissingBookingFields,
   firstMissingBookingPrompt,
-} from '../src/domain/booking-policy.js';
-import { assertReasonableBookingDate, isDateOnOrAfterToday } from '../src/domain/time.js';
+} from '../../src/domain/booking-policy.js';
+import { assertReasonableBookingDate, isDateOnOrAfterToday } from '../../src/domain/time.js';
 
 describe('pending action gate', () => {
   const policy = new ConfirmationPolicy();

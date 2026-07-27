@@ -1,9 +1,9 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import type { PrismaClient } from '../src/db/client.js';
-import { createAgentToolRegistry, AGENT_TOOL_NAMES } from '../src/tools/index.js';
-import { createTestDatabase } from './helpers/db.js';
-import { dateKeyInTimeZone, seedConversationFixture } from './helpers/fixtures.js';
+import type { PrismaClient } from '../../src/db/client.js';
+import { createAgentToolRegistry, AGENT_TOOL_NAMES } from '../../src/tools/index.js';
+import { createTestDatabase } from '../helpers/db.js';
+import { dateKeyInTimeZone, seedConversationFixture } from '../helpers/fixtures.js';
 
 describe('agent tools', () => {
   let prisma: PrismaClient;

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { WhatsAppClient, WhatsAppClientError } from '../src/whatsapp/client.js';
+import { WhatsAppClient, WhatsAppClientError } from '../../src/whatsapp/client.js';
 
 describe('WhatsAppClient', () => {
   it('sends the official Graph messages payload shape', async () => {

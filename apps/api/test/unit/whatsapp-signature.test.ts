@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   createTestWhatsAppSignature,
   verifyWhatsAppSignature,
-} from '../src/whatsapp/signature.js';
+} from '../../src/whatsapp/signature.js';
 
 describe('WhatsApp signature validation', () => {
   const secret = 'meta-app-secret-for-tests';
