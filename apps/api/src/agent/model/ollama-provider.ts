@@ -45,7 +45,21 @@ type OllamaChatResponse = {
 
 const DEFAULT_BASE_URL = 'http://127.0.0.1:11434';
 const DEFAULT_MODEL = 'qwen3:4b';
-const DEFAULT_TIMEOUT_MS = 30_000;
+const DEFAULT_TIMEOUT_MS = 120_000;
+
+/**
+ * qwen3 sometimes still emits thinking into message content even when think=false.
+ * Strip those blocks so customers never see chain-of-thought.
+ */
+export function stripThinkingFromContent(content: string): string {
+  let cleaned = content.replace(/<think\b[^>]*>[\s\S]*?<\/think>/gi, '');
+  // Orphan closing tag: model dumped reasoning then </think> then the real reply.
+  const orphanClose = cleaned.lastIndexOf('</think>');
+  if (orphanClose !== -1) {
+    cleaned = cleaned.slice(orphanClose + '</think>'.length);
+  }
+  return cleaned.trim();
+}
 
 function joinUrl(baseUrl: string, path: string): string {
   return `${baseUrl.replace(/\/+$/, '')}${path}`;
@@ -324,10 +338,10 @@ export class OllamaModelProvider implements ModelProvider {
       }
 
       const toolCalls = mapToolCalls(body.message);
-      const text =
-        typeof body.message.content === 'string' && body.message.content.trim() !== ''
-          ? body.message.content
-          : null;
+      const rawContent =
+        typeof body.message.content === 'string' ? body.message.content : '';
+      const cleanedContent = stripThinkingFromContent(rawContent);
+      const text = cleanedContent !== '' ? cleanedContent : null;
 
       const finishReason =
         toolCalls.length > 0

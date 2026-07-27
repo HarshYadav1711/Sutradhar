@@ -87,6 +87,10 @@ async function main(): Promise<void> {
         continue;
       }
 
+      output.write(
+        '(waiting on local model — first reply can take up to a couple of minutes)\n',
+      );
+
       const response = await app.inject({
         method: 'POST',
         url: '/api/simulator/messages',

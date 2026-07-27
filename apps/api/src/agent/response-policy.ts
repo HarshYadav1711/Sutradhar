@@ -3,6 +3,26 @@ const TOOL_NAME_PATTERN =
   /\b(search_services|check_availability|get_customer_profile|save_customer_details|prepare_booking|prepare_reschedule|create_handoff|commit_pending_action|cancel_pending_action)\b/gi;
 
 /**
+ * Small models sometimes emit a fake tool-call JSON blob as customer text.
+ * Treat that as unusable so the orchestrator can fall back to a controlled failure.
+ */
+export function looksLikeLeakedToolCall(text: string): boolean {
+  const trimmed = text.trim();
+  if (!trimmed.startsWith('{')) {
+    return false;
+  }
+
+  if (/"parameters"\s*:/.test(trimmed) || /"arguments"\s*:/.test(trimmed)) {
+    return true;
+  }
+
+  return (
+    /"name"\s*:/.test(trimmed) &&
+    /"(serviceId|availabilitySlotId|query|handoffReason|bookingId)"\s*:/.test(trimmed)
+  );
+}
+
+/**
  * WhatsApp-friendly customer text: no markdown tables, no internal tool names,
  * no fake success phrasing, concise line breaks.
  */
@@ -12,6 +32,10 @@ export function sanitizeCustomerResponse(raw: string | null | undefined): string
   }
 
   let text = raw.replace(/\r\n/g, '\n').trim();
+
+  if (looksLikeLeakedToolCall(text)) {
+    return '';
+  }
 
   if (MARKDOWN_TABLE_PATTERN.test(text)) {
     text = text
@@ -25,6 +49,15 @@ export function sanitizeCustomerResponse(raw: string | null | undefined): string
   text = text.replace(/```[\s\S]*?```/g, '').trim();
   text = text.replace(/\*\*([^*]+)\*\*/g, '$1');
   text = text.replace(/__([^_]+)__/g, '$1');
+
+  if (looksLikeLeakedToolCall(text)) {
+    return '';
+  }
+
+  // Small local models invent broken apology tokens like "Mafik" / bare "Maaf".
+  text = text.replace(/\bMafik\s+Hai\b/gi, 'Maaf kijiyega');
+  text = text.replace(/\bMafik\b/gi, 'Maaf kijiyega');
+  text = text.replace(/\bMaaf(?!\s+kijiyega)\b/gi, 'Maaf kijiyega');
 
   // Collapse excessive blank lines for WhatsApp.
   text = text.replace(/\n{3,}/g, '\n\n').trim();

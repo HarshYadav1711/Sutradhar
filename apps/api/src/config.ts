@@ -39,7 +39,7 @@ const AppConfigSchema = z
     LLM_PROVIDER: z.enum(['ollama', 'scripted']).default('ollama'),
     OLLAMA_BASE_URL: z.string().url().default('http://127.0.0.1:11434'),
     OLLAMA_MODEL: nonEmptyString.default('qwen3:4b'),
-    OLLAMA_TIMEOUT_MS: z.coerce.number().int().min(1000).max(300_000).default(30_000),
+    OLLAMA_TIMEOUT_MS: z.coerce.number().int().min(1000).max(300_000).default(120_000),
     WHATSAPP_ENABLED: booleanFromEnv.default(false),
     META_GRAPH_VERSION: z.string().optional().default(''),
     WHATSAPP_ACCESS_TOKEN: z.string().optional().default(''),

@@ -41,6 +41,10 @@ describe('agent tools', () => {
     expect(allData.count).toBe(5);
     expect(allData.services[0]?.id).toBeTruthy();
     expect(allData.services[0]?.basePriceMinor).toBeGreaterThan(0);
+    expect(allData.services[0]).toMatchObject({
+      priceLabel: expect.stringMatching(/^INR\s/),
+      basePriceInr: allData.services[0]!.basePriceMinor / 100,
+    });
 
     const empty = await fixture.registry.execute(
       'search_services',

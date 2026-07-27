@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { formatInrFromMinor } from '../../domain/references.js';
 import type { AgentTool } from '../types.js';
 
 const inputSchema = z.object({
@@ -32,7 +33,10 @@ export const searchServicesTool: AgentTool<typeof inputSchema, unknown> = {
         name: service.name,
         slug: service.slug,
         description: service.description,
+        // Minor units are for internal math only — quote customers with priceLabel.
         basePriceMinor: service.basePriceMinor,
+        basePriceInr: service.basePriceMinor / 100,
+        priceLabel: formatInrFromMinor(service.basePriceMinor),
         estimatedDurationMinutes: service.estimatedDurationMinutes,
         currency: context.currency ?? 'INR',
       })),

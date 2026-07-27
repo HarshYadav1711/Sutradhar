@@ -176,6 +176,33 @@ describe('OllamaModelProvider', () => {
     expect(logged).not.toContain('Ananya');
   });
 
+  it('strips leaked thinking blocks from assistant content', async () => {
+    const fetchImpl = vi.fn(async () =>
+      Response.json({
+        model: 'qwen3:4b',
+        message: {
+          role: 'assistant',
+          content:
+            '<think>internal reasoning about AC servicing</think>\nSector 62 ka location bataiye.',
+        },
+        done: true,
+        done_reason: 'stop',
+      }),
+    );
+
+    const provider = new OllamaModelProvider({
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    });
+
+    const result = await provider.complete(createRequest());
+    expect(result.ok).toBe(true);
+    if (!result.ok) {
+      throw new Error(result.errorMessage);
+    }
+    expect(result.text).toBe('Sector 62 ka location bataiye.');
+    expect(result.text).not.toContain('internal reasoning');
+  });
+
   it('reports model-not-found through health and complete paths', async () => {
     const fetchImpl = vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);

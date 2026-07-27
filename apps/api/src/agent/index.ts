@@ -14,7 +14,11 @@ export type {
   ModelUsage,
 } from './model/types.js';
 
-export { OllamaModelProvider, mapModelRequestToOllamaPayload } from './model/ollama-provider.js';
+export {
+  OllamaModelProvider,
+  mapModelRequestToOllamaPayload,
+  stripThinkingFromContent,
+} from './model/ollama-provider.js';
 export { ScriptedModelProvider } from './model/scripted-provider.js';
 export type { ScriptedModelResponse } from './model/scripted-provider.js';
 export { toolToModelDefinition, zodSchemaToParameters } from './model/tool-schema.js';
