@@ -1,24 +1,24 @@
 # Sutradhar architecture
 
-This document describes the intended system shape and data flow. It does not claim that every component is already implemented.
+This document describes the implemented system shape and data flow.
 
 ## Overview
 
-Sutradhar is a monorepo-style Node.js application with:
+Sutradhar is a monorepo Node.js application with:
 
 - An API server (Fastify) that receives WhatsApp webhooks, simulator traffic, and operator API requests.
 - One bounded orchestrating agent that interprets customer messages, calls typed tools, and returns customer responses or handoffs.
 - Deterministic policy layers for confirmation, pending actions, and human escalation.
 - A local SQLite database (Prisma) as the source of truth for customers, services, availability, bookings, conversations, pending actions, tool executions, handoffs, and webhook events.
-- An optional operator console (React) that reads operator APIs.
+- An operator console (React) that reads operator APIs with polling.
 - Ollama as the default local model provider, with a scripted provider for tests only.
 
 There is one orchestrating agent. There are not multiple peer agents for booking, search, or escalation.
 
-## Runtime packages (planned)
+## Runtime packages
 
 - API and agent runtime on Node.js 24 with TypeScript in strict mode and native ESM.
-- Shared domain types, Zod schemas, and repository boundaries where they improve testability.
+- Shared contracts package (`@sutradhar/contracts`) for Zod schemas.
 - Operator console built with React 19 and Vite.
 - Tests with Vitest using temporary SQLite databases and scripted model responses.
 
@@ -50,7 +50,7 @@ For each accepted inbound customer message:
    - Explicit affirmative: internal executor commits the pending action transactionally and updates conversation state.
    - Explicit rejection or expiry handling: cancel or expire the pending action as policy dictates.
    - Ambiguous message: do not commit; ask for explicit confirmation or continue collection as appropriate.
-3. **Bounded agent loop**: if model work is still needed, the context builder assembles a compact prompt and available tools. The loop allows a strict maximum number of model decisions per inbound message (recommended: 5).
+3. The context builder assembles a compact prompt and available tools. The loop allows a maximum of 5 model decisions per inbound message.
 4. **Model decision**: the provider returns one typed outcome path: tool call, customer response, human handoff signal, or controlled failure. Hidden chain-of-thought is not stored or displayed.
 5. **Tool execution**: agent-exposed tools validate input with Zod, run deterministic implementations, log executions, and return typed results. Tools may read or prepare state; they do not commit high-impact booking writes.
 6. **Policy outcomes**:
@@ -79,7 +79,7 @@ For each accepted inbound customer message:
 
 ## Conversation state machine
 
-Recommended states:
+States:
 
 - `IDLE`
 - `COLLECTING_BOOKING_DETAILS`

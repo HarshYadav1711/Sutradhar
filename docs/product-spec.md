@@ -104,7 +104,7 @@ The initial release is complete only when all of the following are true:
 16. Production builds pass.
 17. No secrets are committed.
 18. The README matches the real implementation.
-19. The repository contains no hiring or assignment language.
+19. The repository documentation describes the product on its own merits.
 20. The demo can be completed using only free, local, or official test resources.
 
 ## Status note
