@@ -20,8 +20,8 @@ import { requireAdmin } from '../http/admin-auth.js';
 import { parseOrThrow, sendError } from '../http/errors.js';
 import type { OperatorQueryService } from '../services/operator-query-service.js';
 
+/** Persisted Booking statuses only. Pending proposals use PendingAction, not Booking. */
 const BookingStatusFilterSchema = z.enum([
-  'PENDING_CONFIRMATION',
   'CONFIRMED',
   'RESCHEDULED',
   'CANCELLED',

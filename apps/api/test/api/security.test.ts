@@ -9,7 +9,7 @@ import { maskWhatsAppNumber } from '../../src/http/privacy.js';
 import { toPublicErrorBody } from '../../src/http/errors.js';
 import { createTestDatabase } from '../helpers/db.js';
 
-describe('Stage 9 security and configuration', () => {
+describe('Security and configuration', () => {
   let app: App;
   let prisma: PrismaClient;
   let cleanup: (() => Promise<void>) | undefined;

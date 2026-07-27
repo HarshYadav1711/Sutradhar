@@ -2,7 +2,7 @@
 
 ## Context
 
-Stage 9 hardens Sutradhar without expanding product scope. The API must remain usable for local WhatsApp-disabled development while adding configuration validation, HTTP protections, structured logging redaction, readiness probes, and privacy masking for operator list views.
+This decision hardens Sutradhar without expanding product scope. The API must remain usable for local WhatsApp-disabled development while adding configuration validation, HTTP protections, structured logging redaction, readiness probes, and privacy masking for operator list views.
 
 ## Decision
 

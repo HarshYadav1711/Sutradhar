@@ -15,9 +15,9 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -b tsconfig.json --force",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "clean": "node --input-type=module -e \"import { rm } from 'node:fs/promises'; await rm('dist', { recursive: true, force: true });\""
+    "clean": "node --input-type=module -e \"import { rm } from 'node:fs/promises'; await Promise.all([rm('dist', { recursive: true, force: true }), rm('tsconfig.tsbuildinfo', { force: true })]);\""
   },
   "dependencies": {
     "zod": "4.4.3"

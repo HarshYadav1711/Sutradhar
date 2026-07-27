@@ -16,14 +16,8 @@ import {
 import { usePolling } from '../lib/usePolling';
 import styles from '../styles/console.module.css';
 
-const BOOKING_STATUSES = [
-  '',
-  'PENDING_CONFIRMATION',
-  'CONFIRMED',
-  'RESCHEDULED',
-  'CANCELLED',
-  'COMPLETED',
-] as const;
+/** Filters for persisted Booking rows. Pending proposals live on PendingAction, not Booking. */
+const BOOKING_STATUSES = ['', 'CONFIRMED', 'RESCHEDULED', 'CANCELLED', 'COMPLETED'] as const;
 
 function bookingTone(status: string) {
   if (status === 'CONFIRMED' || status === 'RESCHEDULED' || status === 'COMPLETED') {
@@ -31,9 +25,6 @@ function bookingTone(status: string) {
   }
   if (status === 'CANCELLED') {
     return 'danger' as const;
-  }
-  if (status === 'PENDING_CONFIRMATION') {
-    return 'warn' as const;
   }
   return conversationStatusTone(status);
 }

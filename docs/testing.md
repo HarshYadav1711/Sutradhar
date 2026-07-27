@@ -16,7 +16,7 @@ Sutradhar tests are deterministic and offline.
 | `domain/` | Tools, pending-action safety, seed/domain constraints |
 | `api/` | HTTP operator, health, security |
 | `webhook/` | WhatsApp webhook HTTP + durable inbox |
-| `agent/` | Orchestrator flows + Stage 10 numbered regressions |
+| `agent/` | Orchestrator flows and numbered safety regressions |
 
 ## Local commands
 

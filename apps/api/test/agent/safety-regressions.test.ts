@@ -1,6 +1,6 @@
 /**
- * Stage 10 explicit regression suite.
- * Every case is named for reviewer traceability. Uses isolated SQLite + ScriptedModelProvider.
+ * Explicit safety and integration regression suite.
+ * Uses isolated SQLite and ScriptedModelProvider (not the product LLM path).
  */
 import { createHmac } from 'node:crypto';
 
@@ -22,10 +22,10 @@ import { dateKeyInTimeZone, seedConversationFixture } from '../helpers/fixtures.
 import { textReply, toolCall } from '../helpers/scripted.js';
 
 const NOW = new Date('2026-07-27T04:00:00.000Z');
-const ADMIN_TOKEN = 'stage10-admin-token';
-const APP_SECRET = 'stage10-meta-app-secret';
+const ADMIN_TOKEN = 'regression-admin-token';
+const APP_SECRET = 'regression-meta-app-secret';
 
-describe('Stage 10 regressions', () => {
+describe('Safety regressions', () => {
   let prisma: PrismaClient;
   let cleanup: (() => Promise<void>) | undefined;
   let databaseUrl: string;

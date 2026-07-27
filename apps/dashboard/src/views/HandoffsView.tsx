@@ -16,11 +16,14 @@ import styles from '../styles/console.module.css';
 
 const STATUS_FILTERS = ['', ...HandoffStatusSchema.options] as const;
 
-const ACTIONABLE_STATUSES = [
+const STATUS_OPTIONS = [
   { value: 'OPEN', label: 'Open' },
   { value: 'IN_PROGRESS', label: 'In review' },
   { value: 'RESOLVED', label: 'Resolved' },
+  { value: 'CLOSED', label: 'Closed' },
 ] as const;
+
+type HandoffUpdateStatus = (typeof STATUS_OPTIONS)[number]['value'];
 
 export type HandoffsViewProps = {
   client: OperatorApiClient;
@@ -53,7 +56,7 @@ export function HandoffsView({ client }: HandoffsViewProps) {
 
   const { refresh } = usePolling(load, { intervalMs: 4000 });
 
-  const updateStatus = async (handoffId: string, nextStatus: 'OPEN' | 'IN_PROGRESS' | 'RESOLVED') => {
+  const updateStatus = async (handoffId: string, nextStatus: HandoffUpdateStatus) => {
     setUpdatingId(handoffId);
     setActionError(null);
     try {
@@ -166,18 +169,14 @@ export function HandoffsView({ client }: HandoffsViewProps) {
                         <select
                           className={styles.select}
                           aria-label={`Update status for ${item.reference}`}
-                          value={
-                            ACTIONABLE_STATUSES.some((entry) => entry.value === item.status)
-                              ? item.status
-                              : 'OPEN'
-                          }
+                          value={item.status}
                           disabled={updatingId === item.id}
                           onChange={(event) => {
-                            const next = event.target.value as 'OPEN' | 'IN_PROGRESS' | 'RESOLVED';
+                            const next = event.target.value as HandoffUpdateStatus;
                             void updateStatus(item.id, next);
                           }}
                         >
-                          {ACTIONABLE_STATUSES.map((entry) => (
+                          {STATUS_OPTIONS.map((entry) => (
                             <option key={entry.value} value={entry.value}>
                               {entry.label}
                             </option>
