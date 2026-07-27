@@ -4,15 +4,14 @@ import { PrismaClient } from '../generated/prisma/client.js';
 
 export type { PrismaClient };
 
-export function resolveDatabaseUrl(explicitUrl?: string): string {
-  const url = explicitUrl ?? process.env.DATABASE_URL;
-  if (!url || url.trim() === '') {
-    throw new Error('DATABASE_URL is required');
+export function resolveDatabaseUrl(explicitUrl: string): string {
+  if (!explicitUrl || explicitUrl.trim() === '') {
+    throw new Error('DATABASE_URL is required — pass it from loadConfig()');
   }
-  return url;
+  return explicitUrl;
 }
 
-export function createPrismaClient(databaseUrl = resolveDatabaseUrl()): PrismaClient {
-  const adapter = new PrismaBetterSqlite3({ url: databaseUrl });
+export function createPrismaClient(databaseUrl: string): PrismaClient {
+  const adapter = new PrismaBetterSqlite3({ url: resolveDatabaseUrl(databaseUrl) });
   return new PrismaClient({ adapter });
 }

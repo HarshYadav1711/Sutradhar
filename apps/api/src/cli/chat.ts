@@ -37,7 +37,10 @@ async function main(): Promise<void> {
     logger: false,
   });
 
-  const customerKey = process.env.SIMULATOR_CUSTOMER_KEY?.trim() || DEFAULT_CUSTOMER_KEY;
+  const customerKey =
+    config.SIMULATOR_CUSTOMER_KEY.trim() !== ''
+      ? config.SIMULATOR_CUSTOMER_KEY.trim()
+      : DEFAULT_CUSTOMER_KEY;
   let startFreshNext = true;
 
   output.write('Sutradhar local chat\n');

@@ -11,6 +11,8 @@ import type {
   OperatorOverview,
 } from '@sutradhar/contracts';
 
+import { toOperatorCustomerSummary } from '../http/privacy.js';
+
 function toIso(date: Date): string {
   return date.toISOString();
 }
@@ -104,11 +106,7 @@ export class OperatorQueryService {
         detectedLanguage: row.detectedLanguage,
         lastActivityAt: toIso(row.lastActivityAt),
         createdAt: toIso(row.createdAt),
-        customer: {
-          id: row.customer.id,
-          whatsappNumber: row.customer.whatsappNumber,
-          name: row.customer.name,
-        },
+        customer: toOperatorCustomerSummary(row.customer, { maskWhatsApp: true }),
         activeBookingId: row.activeBookingId,
         activeBookingReference: row.activeBooking?.reference ?? null,
         pendingActionId: row.pendingActions[0]?.id ?? null,
@@ -160,11 +158,7 @@ export class OperatorQueryService {
       structuredState: structuredStateRecord(row.structuredState),
       lastActivityAt: toIso(row.lastActivityAt),
       createdAt: toIso(row.createdAt),
-      customer: {
-        id: row.customer.id,
-        whatsappNumber: row.customer.whatsappNumber,
-        name: row.customer.name,
-      },
+      customer: toOperatorCustomerSummary(row.customer, { maskWhatsApp: false }),
       activeBooking: row.activeBooking
         ? {
             id: row.activeBooking.id,
@@ -279,11 +273,7 @@ export class OperatorQueryService {
         id: row.id,
         reference: row.reference,
         status: row.status,
-        customer: {
-          id: row.customer.id,
-          whatsappNumber: row.customer.whatsappNumber,
-          name: row.customer.name,
-        },
+        customer: toOperatorCustomerSummary(row.customer, { maskWhatsApp: true }),
         serviceName: row.service.name,
         startsAt: toIso(row.availabilitySlot.startsAt),
         quantity: row.quantity,
@@ -318,11 +308,7 @@ export class OperatorQueryService {
       id: row.id,
       reference: row.reference,
       status: row.status,
-      customer: {
-        id: row.customer.id,
-        whatsappNumber: row.customer.whatsappNumber,
-        name: row.customer.name,
-      },
+      customer: toOperatorCustomerSummary(row.customer, { maskWhatsApp: false }),
       serviceName: row.service.name,
       serviceId: row.serviceId,
       availabilitySlotId: row.availabilitySlotId,
@@ -366,11 +352,7 @@ export class OperatorQueryService {
         summary: row.summary,
         conversationId: row.conversationId,
         bookingId: row.bookingId,
-        customer: {
-          id: row.conversation.customer.id,
-          whatsappNumber: row.conversation.customer.whatsappNumber,
-          name: row.conversation.customer.name,
-        },
+        customer: toOperatorCustomerSummary(row.conversation.customer, { maskWhatsApp: true }),
         createdAt: toIso(row.createdAt),
         updatedAt: toIso(row.updatedAt),
       })),
@@ -405,11 +387,7 @@ export class OperatorQueryService {
       summary: row.summary,
       conversationId: row.conversationId,
       bookingId: row.bookingId,
-      customer: {
-        id: row.conversation.customer.id,
-        whatsappNumber: row.conversation.customer.whatsappNumber,
-        name: row.conversation.customer.name,
-      },
+      customer: toOperatorCustomerSummary(row.conversation.customer, { maskWhatsApp: false }),
       createdAt: toIso(row.createdAt),
       updatedAt: toIso(row.updatedAt),
     };

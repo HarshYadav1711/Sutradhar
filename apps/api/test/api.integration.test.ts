@@ -108,8 +108,11 @@ describe('API integration', () => {
     expect(response.statusCode).toBe(200);
     const body = ReadyResponseSchema.parse(response.json());
     expect(body.checks.database.ok).toBe(true);
+    expect(body.checks.worker.ok).toBe(true);
+    expect(body.checks.ollama.ok).toBe(true);
     expect(body.checks.simulator.enabled).toBe(true);
     expect(body.checks.whatsapp.enabled).toBe(false);
+    expect(body.checks.whatsapp.ok).toBe(true);
   });
 
   it('returns 404 when simulator is disabled', async () => {

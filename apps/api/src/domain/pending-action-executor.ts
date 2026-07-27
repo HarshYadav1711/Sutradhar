@@ -87,7 +87,7 @@ export class PendingActionExecutor {
     now?: Date;
   }) {
     const now = input.now ?? new Date();
-    const timeZone = this.options.timeZone ?? process.env.BUSINESS_TIMEZONE ?? 'Asia/Kolkata';
+    const timeZone = this.options.timeZone ?? 'Asia/Kolkata';
 
     const pending = await this.db.pendingAction.findUnique({
       where: { id: input.pendingActionId },

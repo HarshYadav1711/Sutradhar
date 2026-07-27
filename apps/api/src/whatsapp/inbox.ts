@@ -183,7 +183,7 @@ export class WebhookInboxService {
     }
 
     try {
-      await this.processPayload(event.eventType, event.payload);
+      await this.processPayload(event.id, event.eventType, event.payload);
       await this.db.webhookEvent.update({
         where: { id: event.id },
         data: {
@@ -207,7 +207,11 @@ export class WebhookInboxService {
     return true;
   }
 
-  private async processPayload(eventType: string, payload: unknown): Promise<void> {
+  private async processPayload(
+    webhookEventId: string,
+    eventType: string,
+    payload: unknown,
+  ): Promise<void> {
     const record = payload && typeof payload === 'object' ? (payload as Record<string, unknown>) : null;
     const kind = typeof record?.kind === 'string' ? record.kind : eventType;
 
@@ -216,19 +220,22 @@ export class WebhookInboxService {
     }
 
     if (kind === 'text_message') {
-      await this.processTextMessage(record!);
+      await this.processTextMessage(webhookEventId, record!);
       return;
     }
 
     if (kind === 'unsupported_message') {
-      await this.processUnsupportedMessage(record!);
+      await this.processUnsupportedMessage(webhookEventId, record!);
       return;
     }
 
     throw new PermanentWebhookError(`Unsupported webhook event type: ${kind}`, 'UNKNOWN_EVENT_TYPE');
   }
 
-  private async processTextMessage(event: Record<string, unknown>): Promise<void> {
+  private async processTextMessage(
+    webhookEventId: string,
+    event: Record<string, unknown>,
+  ): Promise<void> {
     const waId = String(event.waId ?? '');
     const text = String(event.text ?? '');
     const externalMessageId = String(event.externalMessageId ?? '');
@@ -247,49 +254,88 @@ export class WebhookInboxService {
     });
 
     if (result.outboundText && this.whatsapp) {
-      try {
-        const sent = await this.whatsapp.sendText({
-          to: waId,
-          body: result.outboundText,
-        });
-
-        if (sent.messageId && result.outboundMessageId) {
-          try {
-            await this.db.message.update({
-              where: { id: result.outboundMessageId },
-              data: {
-                externalMessageId: sent.messageId,
-                metadata: {
-                  channel: 'whatsapp',
-                  outboundProvider: 'meta',
-                },
-              },
-            });
-          } catch (error) {
-            if (
-              !(
-                error instanceof Error &&
-                'code' in error &&
-                (error as { code?: string }).code === 'P2002'
-              )
-            ) {
-              throw error;
-            }
-          }
-        }
-      } catch (error) {
-        if (error instanceof WhatsAppClientError && !error.retryable) {
-          throw new PermanentWebhookError(error.message, error.code);
-        }
-        throw new TransientWebhookError(
-          error instanceof Error ? error.message : 'WhatsApp delivery failed',
-          error instanceof WhatsAppClientError ? error.code : 'WHATSAPP_DELIVERY_FAILED',
-        );
-      }
+      await this.deliverOutboundOnce({
+        waId,
+        outboundText: result.outboundText,
+        outboundMessageId: result.outboundMessageId,
+        webhookEventId,
+        conversationId: result.conversationId,
+      });
     }
   }
 
-  private async processUnsupportedMessage(event: Record<string, unknown>): Promise<void> {
+  /**
+   * Sends an outbound WhatsApp message at most once per persisted outbound row.
+   * If Meta already accepted the message (externalMessageId set), skip re-send on retry.
+   */
+  private async deliverOutboundOnce(input: {
+    waId: string;
+    outboundText: string;
+    outboundMessageId: string | null;
+    webhookEventId: string;
+    conversationId: string;
+  }): Promise<void> {
+    if (!this.whatsapp) {
+      return;
+    }
+
+    if (input.outboundMessageId) {
+      const existing = await this.db.message.findUnique({
+        where: { id: input.outboundMessageId },
+        select: { id: true, externalMessageId: true },
+      });
+      if (existing?.externalMessageId) {
+        return;
+      }
+    }
+
+    try {
+      const sent = await this.whatsapp.sendText({
+        to: input.waId,
+        body: input.outboundText,
+      });
+
+      if (sent.messageId && input.outboundMessageId) {
+        try {
+          await this.db.message.update({
+            where: { id: input.outboundMessageId },
+            data: {
+              externalMessageId: sent.messageId,
+              metadata: {
+                channel: 'whatsapp',
+                outboundProvider: 'meta',
+                webhookEventId: input.webhookEventId || undefined,
+                conversationId: input.conversationId,
+              },
+            },
+          });
+        } catch (error) {
+          if (
+            !(
+              error instanceof Error &&
+              'code' in error &&
+              (error as { code?: string }).code === 'P2002'
+            )
+          ) {
+            throw error;
+          }
+        }
+      }
+    } catch (error) {
+      if (error instanceof WhatsAppClientError && !error.retryable) {
+        throw new PermanentWebhookError(error.message, error.code);
+      }
+      throw new TransientWebhookError(
+        error instanceof Error ? error.message : 'WhatsApp delivery failed',
+        error instanceof WhatsAppClientError ? error.code : 'WHATSAPP_DELIVERY_FAILED',
+      );
+    }
+  }
+
+  private async processUnsupportedMessage(
+    _webhookEventId: string,
+    event: Record<string, unknown>,
+  ): Promise<void> {
     const waId = String(event.waId ?? '');
     const externalMessageId = String(event.externalMessageId ?? '');
     const messageType = String(event.messageType ?? 'unknown');

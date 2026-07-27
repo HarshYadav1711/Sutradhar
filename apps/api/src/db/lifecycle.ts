@@ -10,7 +10,7 @@ export class DatabaseLifecycle {
     return this.client;
   }
 
-  start(databaseUrl?: string): PrismaClient {
+  start(databaseUrl: string): PrismaClient {
     if (this.client) {
       return this.client;
     }

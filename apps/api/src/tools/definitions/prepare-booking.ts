@@ -22,7 +22,7 @@ export const prepareBookingTool: AgentTool<typeof inputSchema, unknown> = {
   inputSchema,
   async execute(input, context) {
     const now = context.now ?? new Date();
-    const timeZone = context.timeZone ?? process.env.BUSINESS_TIMEZONE ?? 'Asia/Kolkata';
+    const timeZone = context.timeZone ?? 'Asia/Kolkata';
 
     const service = await context.db.service.findFirst({
       where: { id: input.serviceId, active: true },

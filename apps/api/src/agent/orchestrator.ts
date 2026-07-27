@@ -105,8 +105,8 @@ export class AgentOrchestrator {
     private readonly tools: ToolRegistry,
     options: AgentOrchestratorOptions = {},
   ) {
-    this.timeZone = options.timeZone ?? process.env.BUSINESS_TIMEZONE ?? 'Asia/Kolkata';
-    this.currency = options.currency ?? process.env.BUSINESS_CURRENCY ?? 'INR';
+    this.timeZone = options.timeZone ?? 'Asia/Kolkata';
+    this.currency = options.currency ?? 'INR';
     this.maxSteps = options.maxSteps ?? MAX_AGENT_STEPS;
     this.confirmation = options.confirmation ?? confirmationPolicy;
     this.handoff = options.handoff ?? handoffPolicy;

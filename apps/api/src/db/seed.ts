@@ -148,7 +148,7 @@ export function buildSeedSlots(input: {
 }
 
 export async function seedDatabase(prisma: PrismaClient, options: SeedOptions = {}) {
-  const timezone = options.timezone ?? process.env.BUSINESS_TIMEZONE ?? BUSINESS_TIMEZONE_DEFAULT;
+  const timezone = options.timezone ?? BUSINESS_TIMEZONE_DEFAULT;
   const now = options.now ?? new Date();
 
   await prisma.webhookEvent.deleteMany();

@@ -5,7 +5,7 @@ import { createPrismaClient } from '../db/client.js';
 import { seedDatabase } from '../db/seed.js';
 
 async function main(): Promise<void> {
-  const config = loadConfig(process.env);
+  const config = loadConfig();
   const db = createPrismaClient(config.DATABASE_URL);
 
   try {

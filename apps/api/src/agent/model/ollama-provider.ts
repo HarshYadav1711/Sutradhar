@@ -160,8 +160,8 @@ export class OllamaModelProvider implements ModelProvider {
   private readonly logger?: OllamaModelProviderOptions['logger'];
 
   constructor(options: OllamaModelProviderOptions = {}) {
-    this.baseUrl = options.baseUrl ?? process.env.OLLAMA_BASE_URL ?? DEFAULT_BASE_URL;
-    this.model = options.model ?? process.env.OLLAMA_MODEL ?? DEFAULT_MODEL;
+    this.baseUrl = options.baseUrl ?? DEFAULT_BASE_URL;
+    this.model = options.model ?? DEFAULT_MODEL;
     this.timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
     this.fetchImpl = options.fetchImpl ?? fetch;
     this.logger = options.logger;

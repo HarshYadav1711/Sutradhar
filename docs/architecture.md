@@ -123,3 +123,5 @@ Constraints include unique external WhatsApp message IDs, unique booking and han
 - Deterministic policies own confirmation, commit, cancel, webhook acknowledgement semantics, and escalation recording rules.
 - High-impact writes require the pending-action confirmation gate.
 - Logs redact secrets. Environment validation is strict. Operator APIs are token-protected.
+- `/health` is liveness only. `/ready` reports database, worker, Ollama, WhatsApp configuration, and overall ready/degraded status. WhatsApp-disabled local development is not treated as failed.
+- Operator list views mask WhatsApp numbers; detail views keep full identifiers when operationally needed.

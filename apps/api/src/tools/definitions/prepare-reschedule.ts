@@ -19,7 +19,7 @@ export const prepareRescheduleTool: AgentTool<typeof inputSchema, unknown> = {
   inputSchema,
   async execute(input, context) {
     const now = context.now ?? new Date();
-    const timeZone = context.timeZone ?? process.env.BUSINESS_TIMEZONE ?? 'Asia/Kolkata';
+    const timeZone = context.timeZone ?? 'Asia/Kolkata';
 
     const booking = await context.db.booking.findUnique({
       where: { id: input.bookingId },

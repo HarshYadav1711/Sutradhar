@@ -57,9 +57,9 @@ export class ContextBuilder {
 
   async build(conversationId: string, options: ContextBuilderOptions = {}): Promise<BuiltAgentContext> {
     const recentMessageLimit = options.recentMessageLimit ?? DEFAULT_RECENT_MESSAGE_LIMIT;
-    const timeZone = options.timeZone ?? process.env.BUSINESS_TIMEZONE ?? 'Asia/Kolkata';
+    const timeZone = options.timeZone ?? 'Asia/Kolkata';
     const now = options.now ?? new Date();
-    const currency = options.currency ?? process.env.BUSINESS_CURRENCY ?? 'INR';
+    const currency = options.currency ?? 'INR';
 
     const conversation = await this.db.conversation.findUnique({
       where: { id: conversationId },

@@ -11,7 +11,8 @@ export const ReadyResponseSchema = z.object({
   timestamp: z.string().min(1),
   checks: z.object({
     database: ReadyCheckSchema,
-    llm: ReadyCheckSchema,
+    worker: ReadyCheckSchema,
+    ollama: ReadyCheckSchema,
     whatsapp: ReadyCheckSchema.extend({
       enabled: z.boolean(),
     }),

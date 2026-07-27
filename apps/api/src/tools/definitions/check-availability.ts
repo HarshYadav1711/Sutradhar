@@ -34,7 +34,7 @@ export const checkAvailabilityTool: AgentTool<typeof inputSchema, unknown> = {
     'Check database-backed availability for a service on a date, with optional morning/afternoon/evening preference.',
   inputSchema,
   async execute(input, context) {
-    const timeZone = context.timeZone ?? process.env.BUSINESS_TIMEZONE ?? 'Asia/Kolkata';
+    const timeZone = context.timeZone ?? 'Asia/Kolkata';
     const now = context.now ?? new Date();
     const service = await context.db.service.findFirst({
       where: { id: input.serviceId, active: true },

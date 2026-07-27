@@ -31,7 +31,11 @@ export function zodErrorMessage(error: ZodError): string {
 }
 
 export function parseOrThrow<T>(
-  schema: { safeParse: (value: unknown) => { success: true; data: T } | { success: false; error: ZodError } },
+  schema: {
+    safeParse: (
+      value: unknown,
+    ) => { success: true; data: T } | { success: false; error: ZodError };
+  },
   value: unknown,
 ): T {
   const parsed = schema.safeParse(value);
@@ -45,4 +49,37 @@ export function parseOrThrow<T>(
     throw error;
   }
   return parsed.data;
+}
+
+/**
+ * Builds a client-safe error envelope. Never includes stack traces or secret values.
+ */
+export function toPublicErrorBody(input: {
+  requestId?: string;
+  statusCode: number;
+  code?: string;
+  message?: string;
+  nodeEnv: string;
+  secrets?: Array<string | undefined | null>;
+}): ApiErrorBody {
+  const isServerError = input.statusCode >= 500;
+  let message =
+    isServerError && input.nodeEnv === 'production'
+      ? 'Internal server error'
+      : (input.message ?? 'Request failed');
+
+  for (const secret of input.secrets ?? []) {
+    if (!secret || secret.trim().length < 4) {
+      continue;
+    }
+    message = message.split(secret).join('[REDACTED]');
+  }
+
+  return {
+    error: {
+      code: input.code ?? (isServerError ? 'INTERNAL_ERROR' : 'REQUEST_FAILED'),
+      message,
+      ...(input.requestId ? { requestId: input.requestId } : {}),
+    },
+  };
 }

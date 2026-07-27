@@ -34,7 +34,7 @@ export const searchServicesTool: AgentTool<typeof inputSchema, unknown> = {
         description: service.description,
         basePriceMinor: service.basePriceMinor,
         estimatedDurationMinutes: service.estimatedDurationMinutes,
-        currency: context.currency ?? process.env.BUSINESS_CURRENCY ?? 'INR',
+        currency: context.currency ?? 'INR',
       })),
       count: matched.length,
     };
